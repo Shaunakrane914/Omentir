@@ -42,6 +42,7 @@ export type StatsGoalsData = {
 };
 
 export type StatsAiData = {
+  pages: { page: string; ai: string; kind: string; fetches: number }[];
   rows: { bucket: string; ai: string; kind: string; fetches: number }[];
 };
 

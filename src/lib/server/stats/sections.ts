@@ -12,6 +12,7 @@ import type {
 import { runHogQL, type StatsPropertyFilter } from "./posthog-query";
 import {
   aiQuery,
+  aiPagesQuery,
   allBreakdownsQuery,
   BREAKDOWNS,
   exitLinksQuery,
@@ -215,8 +216,17 @@ export async function loadGoals(range: Range, interval: StatsInterval, filters: 
 }
 
 export async function loadAi(range: Range, interval: StatsInterval, filters: StatsPropertyFilter[]): Promise<StatsAiData> {
-  const result = await runHogQL(aiQuery(interval, filters), range, filters);
+  const [result, pages] = await Promise.all([
+    runHogQL(aiQuery(interval, filters), range, filters),
+    runHogQL(aiPagesQuery(filters), range, filters),
+  ]);
+  if (result.results.length >= 20000 || pages.results.length >= 20000) {
+    throw new Error("AI activity exceeds the row limit. Select a shorter period.");
+  }
   return {
+    pages: pages.results.map((row) => ({
+      page: str(row[0]), ai: str(row[1]), kind: str(row[2]), fetches: num(row[3]),
+    })),
     rows: result.results.map((row) => ({
       bucket: str(row[0]),
       ai: str(row[1]),

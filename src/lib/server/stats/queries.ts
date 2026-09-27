@@ -331,19 +331,16 @@ const HTTP_LOG_PATHS = `properties.$pathname NOT IN ('/robots.txt', '/sitemap.xm
 const GEMINI_DOMAINS = "('gemini.google.com', 'bard.google.com', 'aistudio.google.com')";
 const GEMINI_OR_GOOGLE = `if(properties.referring_domain IN ${GEMINI_DOMAINS}, 'Gemini', 'Google AI')`;
 
-/**
- * Rows: bucket, ai, kind, fetches. Bot fetches from the $http_log stream,
- * Google AI Overview impressions, and visits sent by Gemini / Google AI.
- * The last two have no kind; they count as AI answers.
- */
-export function aiQuery(interval: StatsInterval, filters: StatsPropertyFilter[] = []) {
-  return `SELECT ${bucketExpr(interval)} AS bucket, ai, coalesce(nullIf(toString(kind), ''), 'assistant') AS kind, sum(fetches) AS fetches
+/** The same recorded activity feeds the chart and its page breakdown. */
+function aiEventsQuery(filters: StatsPropertyFilter[]) {
+  return `SELECT timestamp, ai, coalesce(nullIf(toString(kind), ''), 'assistant') AS kind, fetches, page
 FROM (
   SELECT
     timestamp,
     coalesce(nullIf(toString(properties.ai_name), ''), getBotName(properties.$raw_user_agent)) AS ai,
     properties.ai_kind AS kind,
-    1 AS fetches
+    1 AS fetches,
+    coalesce(toString(properties.$pathname), '') AS page
   FROM events
   WHERE event = '$http_log'
     AND timestamp >= ${F} AND timestamp < ${T}
@@ -352,7 +349,7 @@ FROM (
 
   UNION ALL
 
-  SELECT timestamp, 'Google AI' AS ai, NULL AS kind, toFloat(properties.gsc_impressions) AS fetches
+  SELECT timestamp, 'Google AI' AS ai, NULL AS kind, toFloat(properties.gsc_impressions) AS fetches, coalesce(toString(properties.gsc_page), '') AS page
   FROM events
   WHERE event = 'google_ai_overview_report'
     AND timestamp >= ${F} AND timestamp < ${T}
@@ -361,7 +358,7 @@ FROM (
 
   UNION ALL
 
-  SELECT timestamp, ${GEMINI_OR_GOOGLE} AS ai, NULL AS kind, 1 AS fetches
+  SELECT timestamp, ${GEMINI_OR_GOOGLE} AS ai, NULL AS kind, 1 AS fetches, coalesce(toString(properties.$pathname), '') AS page
   FROM events
   WHERE event = '$pageview'
     AND ${LIVE_SITE}
@@ -369,10 +366,24 @@ FROM (
     AND (properties.referring_domain IN ${GEMINI_DOMAINS} OR properties.google_text_fragment IS NOT NULL)
     AND ${propertyFilters(filters, [[GEMINI_OR_GOOGLE, "ai_name"], ["NULL", "ai_kind"], ["properties.$pathname", "$pathname"]])}
 )
-WHERE timestamp >= ${F} AND timestamp < ${T}
-  AND ai IS NOT NULL AND ai != ''
+WHERE ai IS NOT NULL AND ai != ''`;
+}
+
+/** Rows: bucket, ai, kind, fetches. */
+export function aiQuery(interval: StatsInterval, filters: StatsPropertyFilter[] = []) {
+  return `SELECT ${bucketExpr(interval)} AS bucket, ai, kind, sum(fetches) AS fetches
+FROM (${aiEventsQuery(filters)})
 GROUP BY bucket, ai, kind
 ORDER BY bucket
+LIMIT 20000`;
+}
+
+/** Rows: page, ai, kind, activity count. Empty page preserves unassigned totals. */
+export function aiPagesQuery(filters: StatsPropertyFilter[] = []) {
+  return `SELECT page, ai, kind, sum(fetches) AS fetches
+FROM (${aiEventsQuery(filters)})
+GROUP BY page, ai, kind
+ORDER BY fetches DESC, page
 LIMIT 20000`;
 }
 
