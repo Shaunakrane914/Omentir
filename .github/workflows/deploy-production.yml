@@ -53,6 +53,12 @@ jobs:
             exit 1
           fi
       - name: bun run build
+        env:
+          # The header's GitHub star count is fetched while prerendering. This
+          # runner's shared IP is usually over GitHub's unauthenticated limit,
+          # so without a token every page ships with no count. Step-scoped so
+          # install scripts never see it.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
           bun run build 2>&1 | tee next-build.log

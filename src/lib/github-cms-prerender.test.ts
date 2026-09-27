@@ -7,6 +7,7 @@ const root = join(import.meta.dir, "../..");
 const deploy = readFileSync(join(root, ".github/workflows/deploy-production.yml"), "utf8");
 const ci = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8");
 const dockerfile = readFileSync(join(root, "Dockerfile"), "utf8");
+const starButton = readFileSync(join(root, "src/app/github-star-button.tsx"), "utf8");
 
 function checkLog(body: string) {
   const log = join(mkdtempSync(join(tmpdir(), "cms-prerender-")), "next-build.log");
@@ -39,6 +40,15 @@ describe("GitHub CMS prerender", () => {
     expect(deploy).not.toMatch(/NEXT_PUBLIC_POSTHOG_KEY:\s*phc_/);
     expect(ci).not.toMatch(/NEXT_PUBLIC_POSTHOG_KEY:\s*phc_/);
     expect(deploy).toContain("Require PostHog project key");
+  });
+
+  test("authenticates the header star count on the runner so deployed pages show it", () => {
+    // aff70d0 shipped every prerendered page with no GitHub star count. The shared
+    // runner IP was over GitHub's 60/hour unauthenticated limit, so the header showed
+    // a bare GitHub icon until the VPS regenerated each page, up to an hour later.
+    expect(deploy).toContain("GITHUB_TOKEN: ${{ github.token }}");
+    expect(starButton).toContain("process.env.GITHUB_TOKEN");
+    expect(starButton).toContain("Authorization: `Bearer ${token}`");
   });
 
   test("rejects a 69-page build because that means Sanity was not queried", () => {

@@ -4,14 +4,21 @@ import { hostedGithubRepo } from "@/lib/hosted-identity";
  * Star count for the public repository, refreshed hourly.
  *
  * Unauthenticated GitHub API calls are limited to 60/hour per IP, so this must
- * stay cached rather than run per request. A failure here is cosmetic: the
- * button still renders, just without a number, and the header never breaks
- * because GitHub is slow or rate-limiting us.
+ * stay cached rather than run per request. The production build runs on a
+ * shared GitHub Actions runner whose IP is usually over that limit, so the
+ * deploy workflow passes GITHUB_TOKEN. Without it every prerendered page ships
+ * with no number until the VPS regenerates it, up to an hour after a deploy.
+ * A failure here is cosmetic: the button still renders, just without a number,
+ * and the header never breaks because GitHub is slow or rate-limiting us.
  */
 async function getStarCount(repo: string): Promise<number | null> {
+  const token = process.env.GITHUB_TOKEN;
   try {
     const response = await fetch(`https://api.github.com/repos/${repo}`, {
-      headers: { Accept: "application/vnd.github+json" },
+      headers: {
+        Accept: "application/vnd.github+json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       next: { revalidate: 3600 },
     });
     if (!response.ok) return null;
