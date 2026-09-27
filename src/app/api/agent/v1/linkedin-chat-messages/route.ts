@@ -1,9 +1,43 @@
 import { auth } from "@/lib/server/auth";
 import { NextResponse } from "next/server";
-import { getLinkedInAccountByAccountId, listWorkspaceIdsSharingLinkedIn } from "@/lib/server/data";
+import {
+  findLeadForWorkspace,
+  getLinkedInAccountByAccountId,
+  listLinkedInAccounts,
+  listWorkspaceIdsSharingLinkedIn,
+} from "@/lib/server/data";
 import { resolveActiveWorkspace } from "@/lib/server/active-workspace";
 import { hasActiveSubscription } from "@/lib/server/subscription";
-import { linkedInChatBelongsToAccount, listLinkedInChatMessagesPage } from "@/lib/server/unipile";
+import {
+  findLinkedInChatWithAttendee,
+  linkedInChatBelongsToAccount,
+  listLinkedInChatMessagesPage,
+} from "@/lib/server/unipile";
+
+// A stored conversation older than the inbox page has no chat id on the client.
+// Find the lead's live chat on one of the workspace's accounts so Messages
+// shows LinkedIn's thread, not Omentir's partial copy of it.
+async function findLeadChat(workspaceId: string, leadId: string) {
+  const lead = await findLeadForWorkspace({ workspaceId, leadId });
+  const providerProfileId = lead?.providerProfileId?.trim();
+  if (!providerProfileId) return null;
+  for (const account of await listLinkedInAccounts(workspaceId)) {
+    try {
+      const chatId = await findLinkedInChatWithAttendee({
+        accountId: account.accountId,
+        providerProfileId,
+      });
+      if (chatId) return { chatId, accountId: account.accountId };
+    } catch (error) {
+      // A dead account should not hide a chat that lives on another one.
+      console.error(
+        `[linkedin-chat-messages] chat lookup failed on ${account.accountId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+  return null;
+}
 
 export async function GET(request: Request) {
   const { userId } = await auth();
@@ -17,9 +51,29 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
+  const leadId = url.searchParams.get("leadId")?.trim() || "";
+  const cursor = url.searchParams.get("cursor")?.trim() || undefined;
+
+  if (leadId) {
+    try {
+      const chat = await findLeadChat(workspace.id, leadId);
+      if (!chat) return NextResponse.json({ chatId: null, messages: [] });
+      const page = await listLinkedInChatMessagesPage({ chatId: chat.chatId, limit: 30, cursor });
+      return NextResponse.json({ ...chat, ...page });
+    } catch (error) {
+      console.error(
+        "[linkedin-chat-messages] lead history load failed:",
+        error instanceof Error ? error.message : error,
+      );
+      return NextResponse.json(
+        { error: "LinkedIn messages could not be loaded. Try again." },
+        { status: 502 },
+      );
+    }
+  }
+
   const chatId = url.searchParams.get("chatId")?.trim() || "";
   const accountId = url.searchParams.get("accountId")?.trim() || "";
-  const cursor = url.searchParams.get("cursor")?.trim() || undefined;
   const account = accountId ? await getLinkedInAccountByAccountId(accountId) : null;
   const ownedIds = account ? await listWorkspaceIdsSharingLinkedIn(workspace.id) : [];
 

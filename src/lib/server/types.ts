@@ -528,6 +528,16 @@ export type Conversation = {
   updatedAt: string;
 };
 
+export type LinkedInInboxAttachment = {
+  id: string;
+  type: string;
+  name?: string;
+  // Only set for links LinkedIn serves publicly (shared posts). Files and
+  // images load through the attachment route.
+  url?: string;
+  unavailable?: boolean;
+};
+
 export type LinkedInInboxMessage = {
   id: string;
   chatId: string;
@@ -535,6 +545,14 @@ export type LinkedInInboxMessage = {
   senderName: string;
   body: string;
   createdAt: string;
+  // InMail subject line.
+  subject?: string;
+  attachments?: LinkedInInboxAttachment[];
+  reactions?: string[];
+  // Thread notices such as "Message request accepted", shown as a line, not a bubble.
+  event?: boolean;
+  // Unsent on LinkedIn. The thread keeps a placeholder where it was.
+  deleted?: boolean;
 };
 
 export type LinkedInInboxThread = {

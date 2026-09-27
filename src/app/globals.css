@@ -7036,12 +7036,15 @@ html.dark select {
   border-color: var(--google-border) !important;
 }
 
-html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):focus,
-html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):focus-visible,
-html.dark textarea:focus,
-html.dark textarea:focus-visible,
-html.dark select:focus,
-html.dark select:focus-visible {
+/* Same exemption as the light focus rule: borderless controls (the Messages
+   composer, search fields) get no focus border, or border-0 turns into a
+   bright 2px outline on click. */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([class*="border-0"]):not([class*="border-none"]):focus,
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([class*="border-0"]):not([class*="border-none"]):focus-visible,
+html.dark textarea:not([class*="border-0"]):not([class*="border-none"]):focus,
+html.dark textarea:not([class*="border-0"]):not([class*="border-none"]):focus-visible,
+html.dark select:not([class*="border-0"]):not([class*="border-none"]):focus,
+html.dark select:not([class*="border-0"]):not([class*="border-none"]):focus-visible {
   border-color: var(--google-primary) !important;
   border-width: 2px;
   box-shadow: none !important;

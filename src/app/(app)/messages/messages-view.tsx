@@ -15,6 +15,7 @@ import type {
   Conversation,
   ConversationMessage,
   LeadPreview,
+  LinkedInInboxAttachment,
   LinkedInInboxMessage,
   LinkedInInboxThread,
 } from "@/lib/server/types";
@@ -79,6 +80,18 @@ const chatHistoryCache = {
   messages: {} as Record<string, LinkedInInboxMessage[]>,
   cursors: {} as Record<string, string | undefined>,
   settledIds: new Set<string>(),
+  leadChats: {} as Record<string, LeadChat>,
+};
+
+// The live LinkedIn chat found for a stored conversation that is older than
+// the inbox page. Once found, the thread shows LinkedIn's history, not the
+// stored copy, which misses anything Omentir did not record.
+type LeadChat = { chatId: string; accountId: string };
+type HistoryPage = {
+  messages?: LinkedInInboxMessage[];
+  cursor?: string;
+  chatId?: string | null;
+  accountId?: string;
 };
 
 function mergeMessagesById(messages: LinkedInInboxMessage[], incoming: LinkedInInboxMessage[]) {
@@ -108,6 +121,7 @@ function buildThreads(
   linkedInThreads: LinkedInInboxThread[] = [],
   hydratedMessages: Record<string, LinkedInInboxMessage[]> = {},
   localMessages: Record<string, LocalMessage[]> = {},
+  leadChats: Record<string, LeadChat> = {},
 ): InboxThread[] {
   const uniqueLive = dedupeLinkedInInboxThreads(linkedInThreads);
   const live: InboxThread[] = uniqueLive.map((thread) => {
@@ -148,13 +162,13 @@ function buildThreads(
         : undefined,
     };
   });
-  const stored: InboxThread[] = conversations.flatMap((thread) => {
+  const stored: InboxThread[] = conversations.flatMap((thread): InboxThread[] => {
     const lead = leads.find((item) => item.id === thread.leadId);
     if (storedConversationIsLiveMirror(uniqueLive, lead, thread.messages)) return [];
+    const id = `stored:${thread.id}`;
     const last = thread.messages[thread.messages.length - 1];
-    return [{
-      id: `stored:${thread.id}`,
-      kind: "stored",
+    const base = {
+      id,
       title: lead?.name || last?.senderName || "LinkedIn lead",
       profileName: lead?.name || last?.senderName || "LinkedIn lead",
       profileHeadline: [lead?.title, lead?.company].filter(Boolean).join(" at "),
@@ -162,12 +176,26 @@ function buildThreads(
       avatarUrl: lead?.avatarUrl,
       status: thread.status,
       unread: false,
-      messages: mergeWithLocalMessages(
-        thread.messages,
-        localMessages[`stored:${thread.id}`] || [],
-      ),
       lead,
       conversation: thread,
+    };
+    const leadChat = leadChats[id];
+    const hydrated = hydratedMessages[id];
+    if (leadChat && hydrated) {
+      return [{
+        ...base,
+        kind: "linkedin",
+        messages: mergeWithLocalMessages(hydrated, localMessages[id] || []),
+        // A new stored message means LinkedIn has one too; refetch on change.
+        latestMessageId: last?.id,
+        chatId: leadChat.chatId,
+        accountId: leadChat.accountId,
+      }];
+    }
+    return [{
+      ...base,
+      kind: "stored",
+      messages: mergeWithLocalMessages(thread.messages, localMessages[id] || []),
     }];
   });
   return [...live, ...stored].sort((a, b) => {
@@ -244,6 +272,105 @@ function LinkedInProfileLink({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/linkedin-in-mark.svg" alt="" className="h-full w-full object-contain" />
     </a>
+  );
+}
+
+type DisplayMessage = ConversationMessage &
+  Partial<
+    Pick<LinkedInInboxMessage, "subject" | "attachments" | "reactions" | "event" | "deleted">
+  >;
+
+const DELETED_MESSAGE = "This message has been deleted.";
+
+const ATTACHMENT_LABELS: Record<string, string> = {
+  img: "Photo",
+  video: "Video",
+  audio: "Voice message",
+  linkedin_post: "LinkedIn post",
+};
+
+function attachmentLabel(attachment: LinkedInInboxAttachment) {
+  return attachment.name || ATTACHMENT_LABELS[attachment.type] || "Attachment";
+}
+
+function messagePreview(message: DisplayMessage) {
+  if (message.deleted) return DELETED_MESSAGE;
+  return message.body || (message.attachments?.[0] ? attachmentLabel(message.attachments[0]) : "");
+}
+
+function attachmentSrc(messageId: string, attachment: LinkedInInboxAttachment, accountId: string) {
+  const params = new URLSearchParams({ messageId, attachmentId: attachment.id, accountId });
+  if (attachment.name) params.set("name", attachment.name);
+  return `/api/agent/v1/linkedin-chat-attachment?${params}`;
+}
+
+// A message as LinkedIn shows it: InMail subject, text, photos and files,
+// then the reactions it received.
+function MessageContent({ message, accountId }: { message: DisplayMessage; accountId?: string }) {
+  const reactionCounts = new Map<string, number>();
+  for (const reaction of message.reactions || []) {
+    reactionCounts.set(reaction, (reactionCounts.get(reaction) || 0) + 1);
+  }
+  return (
+    <>
+      {message.subject ? <div className="font-semibold">{message.subject}</div> : null}
+      {message.deleted ? <div className="italic text-zinc-600">{DELETED_MESSAGE}</div> : null}
+      {message.body ? <div className="whitespace-pre-wrap break-words">{message.body}</div> : null}
+      {message.attachments?.map((attachment) => {
+        const label = attachmentLabel(attachment);
+        const href =
+          attachment.url ||
+          (accountId && !attachment.unavailable
+            ? attachmentSrc(message.id, attachment, accountId)
+            : undefined);
+        if (!href) {
+          return (
+            <div key={attachment.id} className="mt-1 text-[12px] italic text-zinc-600">
+              {label} unavailable
+            </div>
+          );
+        }
+        if (attachment.type === "img" && !attachment.url) {
+          return (
+            <a key={attachment.id} href={href} target="_blank" rel="noreferrer" className="mt-1 block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={href} alt={label} className="max-h-64 max-w-full rounded-lg" loading="lazy" />
+            </a>
+          );
+        }
+        if (attachment.type === "video" && !attachment.url) {
+          return <video key={attachment.id} src={href} controls className="mt-1 max-h-64 max-w-full rounded-lg" />;
+        }
+        if (attachment.type === "audio" && !attachment.url) {
+          return <audio key={attachment.id} src={href} controls className="mt-1 max-w-full" />;
+        }
+        return (
+          <a
+            key={attachment.id}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-[12px] font-medium text-zinc-800 hover:bg-zinc-100"
+          >
+            <span className="material-symbols-outlined text-[16px] leading-none">attach_file</span>
+            <span className="truncate">{label}</span>
+          </a>
+        );
+      })}
+      {reactionCounts.size ? (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {Array.from(reactionCounts, ([emoji, count]) => (
+            <span
+              key={emoji}
+              className="rounded-full border border-zinc-200 bg-zinc-50 px-1.5 text-[11px] leading-5"
+            >
+              {emoji}
+              {count > 1 ? ` ${count}` : ""}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -330,11 +457,15 @@ export default function MessagesView({
   const [hydrationSettledIds, setHydrationSettledIds] = useState<Set<string>>(
     chatHistoryCache.settledIds,
   );
+  const [leadChats, setLeadChats] = useState<Record<string, LeadChat>>(
+    chatHistoryCache.leadChats,
+  );
   useEffect(() => {
     chatHistoryCache.messages = hydratedMessages;
     chatHistoryCache.cursors = historyCursors;
     chatHistoryCache.settledIds = hydrationSettledIds;
-  }, [hydratedMessages, historyCursors, hydrationSettledIds]);
+    chatHistoryCache.leadChats = leadChats;
+  }, [hydratedMessages, historyCursors, hydrationSettledIds, leadChats]);
   const threads = useMemo(
     () =>
       buildThreads(
@@ -343,8 +474,16 @@ export default function MessagesView({
         loadedLinkedInThreads || [],
         hydratedMessages,
         localMessages,
+        leadChats,
       ),
-    [loadedConversations, loadedLeads, loadedLinkedInThreads, hydratedMessages, localMessages],
+    [
+      loadedConversations,
+      loadedLeads,
+      loadedLinkedInThreads,
+      hydratedMessages,
+      localMessages,
+      leadChats,
+    ],
   );
   const [tab, setTab] = useState<MessageTab>("all");
   const [search, setSearch] = useState("");
@@ -445,19 +584,26 @@ export default function MessagesView({
   // the inbox poll reports a newer message. Fetched once and never refreshed,
   // the history froze and hid every message sent or received after opening.
   // Primitive deps keep the 5s poll from re-running (and aborting) this.
-  const selectedChat = selected?.kind === "linkedin" ? selected : undefined;
-  const selectedChatThreadId = selectedChat?.id;
-  const selectedChatId = selectedChat?.chatId;
-  const selectedChatAccountId = selectedChat?.accountId;
-  const selectedChatLatestId = selectedChat?.latestMessageId;
+  // Stored conversations ask by lead, and keep doing so after their live chat
+  // is found, so finding it does not load the history a second time.
+  const historyQuery = !selected
+    ? ""
+    : selected.id.startsWith("stored:")
+      ? selected.lead
+        ? new URLSearchParams({ leadId: selected.lead.id }).toString()
+        : ""
+      : selected.kind === "linkedin"
+        ? new URLSearchParams({ chatId: selected.chatId, accountId: selected.accountId }).toString()
+        : "";
+  const historyThreadId = historyQuery ? selected?.id : undefined;
+  const historyLatestId =
+    selected?.kind === "linkedin"
+      ? selected.latestMessageId
+      : selected?.conversation?.messages.at(-1)?.id;
   useEffect(() => {
-    if (!selectedChatThreadId || !selectedChatId || !selectedChatAccountId) return;
+    if (!historyThreadId || !historyQuery) return;
     const controller = new AbortController();
-    const threadId = selectedChatThreadId;
-    const params = new URLSearchParams({
-      chatId: selectedChatId,
-      accountId: selectedChatAccountId,
-    });
+    const threadId = historyThreadId;
 
     const markHistoryError = (failed: boolean) =>
       setHistoryErrorIds((current) => {
@@ -468,15 +614,23 @@ export default function MessagesView({
         return next;
       });
 
-    void fetch(`/api/agent/v1/linkedin-chat-messages?${params}`, {
+    void fetch(`/api/agent/v1/linkedin-chat-messages?${historyQuery}`, {
       signal: controller.signal,
     })
       .then((response) => {
         if (!response.ok) throw new Error(`History request failed: ${response.status}`);
         return response.json();
       })
-      .then((data: { messages?: LinkedInInboxMessage[]; cursor?: string }) => {
+      .then((data: HistoryPage) => {
         markHistoryError(false);
+        const { chatId, accountId } = data;
+        if (chatId && accountId) {
+          setLeadChats((current) =>
+            current[threadId]?.chatId === chatId && current[threadId]?.accountId === accountId
+              ? current
+              : { ...current, [threadId]: { chatId, accountId } },
+          );
+        }
         // Keep the cursor from the first load so "Load next 30" still pages
         // past history the user already loaded.
         setHistoryCursors((current) =>
@@ -500,13 +654,7 @@ export default function MessagesView({
       });
 
     return () => controller.abort();
-  }, [
-    selectedChatThreadId,
-    selectedChatId,
-    selectedChatAccountId,
-    selectedChatLatestId,
-    historyRetry,
-  ]);
+  }, [historyThreadId, historyQuery, historyLatestId, historyRetry]);
 
   function loadMoreMessages(thread: Extract<InboxThread, { kind: "linkedin" }>) {
     const cursor = historyCursors[thread.id];
@@ -522,7 +670,7 @@ export default function MessagesView({
         if (!response.ok) throw new Error(`History request failed: ${response.status}`);
         return response.json();
       })
-      .then((data: { messages?: LinkedInInboxMessage[]; cursor?: string }) => {
+      .then((data: HistoryPage) => {
         setHydratedMessages((current) => ({
           ...current,
           [thread.id]: mergeMessagesById(current[thread.id] || [], data.messages || []),
@@ -770,7 +918,7 @@ export default function MessagesView({
                           ) : null}
                           <div className="mt-1 truncate text-[12px] font-medium text-zinc-700">
                             {last
-                              ? `${last.direction === "outbound" ? "You: " : ""}${last.body}`
+                              ? `${last.direction === "outbound" ? "You: " : ""}${messagePreview(last)}`
                               : "No messages yet"}
                           </div>
                           {thread.unread || conversationHasMeetingBooked(thread.conversation) ? (
@@ -886,6 +1034,11 @@ export default function MessagesView({
                                 </span>
                               </div>
                             ) : null}
+                            {"event" in message && message.event ? (
+                              <p className="text-center text-[11px] font-medium text-zinc-600">
+                                {message.body}
+                              </p>
+                            ) : (
                             <div
                               className={`flex ${outbound ? "justify-end" : "justify-start"} gap-2`}
                             >
@@ -904,7 +1057,10 @@ export default function MessagesView({
                                     : "rounded-tl-md border border-[#0a66c2] bg-white text-zinc-900"
                                 }`}
                               >
-                                <div className="whitespace-pre-wrap break-words">{message.body}</div>
+                                <MessageContent
+                                  message={message}
+                                  accountId={selected.kind === "linkedin" ? selected.accountId : undefined}
+                                />
                                 <div
                                   className="mt-1 text-[10px] font-medium text-zinc-600"
                                   title={formatZonedDateTime(message.createdAt, timeZone)}
@@ -920,12 +1076,13 @@ export default function MessagesView({
                                 />
                               ) : null}
                             </div>
+                            )}
                           </div>
                         );
                       })}
                       </ContentReveal>
                     )}
-                    {selected.kind === "linkedin" && historyErrorIds.has(selected.id) ? (
+                    {historyErrorIds.has(selected.id) ? (
                       <div className="flex items-center justify-center gap-2 pt-1 text-[12px] font-medium text-zinc-700">
                         <span>Could not load the full conversation from LinkedIn.</span>
                         <button
@@ -1081,7 +1238,7 @@ function Composer({
           ))}
         </div>
       ) : null}
-      <div className="flex min-h-8 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition-colors focus-within:border-zinc-900">
+      <div className="flex min-h-8 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
         <input
           ref={fileInputRef}
           type="file"

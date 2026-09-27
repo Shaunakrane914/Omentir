@@ -363,6 +363,23 @@ type UnipileMessage = {
   date?: string;
   created_at?: string;
   sent_at?: string;
+  account_id?: string;
+  subject?: string | null;
+  // LinkedIn's own notices. Hidden ones ("Anton reacted 👍") never show as a
+  // message on LinkedIn; the reaction sits on the message it reacts to.
+  is_event?: number | boolean;
+  hidden?: number | boolean;
+  deleted?: number | boolean;
+  attachments?: UnipileMessageAttachment[];
+  reactions?: Array<{ value?: string }>;
+};
+
+type UnipileMessageAttachment = {
+  id?: string;
+  type?: string;
+  file_name?: string;
+  url?: string;
+  unavailable?: boolean;
 };
 
 type UnipileChat = {
@@ -1109,6 +1126,21 @@ function normalizeChatMessage(message: UnipileMessage, chatId: string): LinkedIn
     attendeeName(message.from) ||
     UNKNOWN_SENDER_NAME;
 
+  const attachments = (message.attachments || []).flatMap((attachment) =>
+    attachment.id
+      ? [{
+          id: attachment.id,
+          type: attachment.type || "file",
+          name: attachment.file_name || undefined,
+          url: attachment.url?.startsWith("https://") ? attachment.url : undefined,
+          unavailable: attachment.unavailable || undefined,
+        }]
+      : [],
+  );
+  const reactions = (message.reactions || []).flatMap((reaction) =>
+    reaction.value ? [reaction.value] : [],
+  );
+
   return {
     id: message.id || `${chatId}-${messageTimestamp(message)}`,
     chatId,
@@ -1116,7 +1148,20 @@ function normalizeChatMessage(message: UnipileMessage, chatId: string): LinkedIn
     senderName: outbound ? "You" : senderName,
     body: messageBody(message),
     createdAt: messageTimestamp(message),
+    ...(message.subject ? { subject: message.subject } : {}),
+    ...(attachments.length ? { attachments } : {}),
+    ...(reactions.length ? { reactions } : {}),
+    ...(message.is_event ? { event: true } : {}),
+    ...(message.deleted ? { deleted: true } : {}),
   };
+}
+
+// What LinkedIn itself shows in a thread: every message with text or an
+// attachment, deleted ones as a placeholder, and no hidden notices. Filtering
+// on text alone dropped photos, files, shared posts and deleted messages.
+function isVisibleChatMessage(message: UnipileMessage) {
+  if (message.hidden) return false;
+  return Boolean(messageBody(message) || message.attachments?.length || message.deleted);
 }
 
 async function searchLinkedIn<T>(input: {
@@ -2092,11 +2137,71 @@ export async function listLinkedInChatMessagesPage(input: {
     }),
   );
   const messages = getListItems<UnipileMessage>(result)
+    .filter(isVisibleChatMessage)
     .map((message) => normalizeChatMessage(message, input.chatId))
-    .filter((message) => message.body)
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   return { messages, cursor: getListCursor(result) };
+}
+
+// The account's 1:1 chat with this person, newest first. One lookup, no
+// profile view. Messages uses it for conversations older than the inbox page,
+// which otherwise showed Omentir's partial stored copy instead of LinkedIn's.
+export async function findLinkedInChatWithAttendee(input: {
+  accountId: string;
+  providerProfileId: string;
+}) {
+  if (!isUnipileConfigured()) return null;
+
+  const result = await request<UnipileListResponse<UnipileChat> | UnipileChat[]>(
+    withQuery(`/api/v1/chat_attendees/${encodeURIComponent(input.providerProfileId)}/chats`, {
+      account_id: input.accountId,
+    }),
+  );
+  const chat = getListItems<UnipileChat>(result)
+    .filter((item) => item.id && (!item.account_id || item.account_id === input.accountId))
+    .sort((a, b) => Date.parse(b.timestamp || "") - Date.parse(a.timestamp || ""))[0];
+  return chat?.id || null;
+}
+
+// The account that owns a message, for checking access before serving one of
+// its attachments.
+export async function linkedInMessageAccountId(messageId: string) {
+  if (!isUnipileConfigured()) return null;
+  try {
+    const message = await request<UnipileMessage>(
+      `/api/v1/messages/${encodeURIComponent(messageId)}`,
+    );
+    return message?.account_id || null;
+  } catch (error) {
+    if (error instanceof UnipileResponseError && (error.status === 404 || error.status === 400)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+// Raw attachment bytes. Unipile hands out att:// references, not public URLs,
+// so photos and files in a chat are served through the app.
+export async function fetchLinkedInMessageAttachment(input: {
+  messageId: string;
+  attachmentId: string;
+}) {
+  const config = getConfig();
+  if (!config) throw new Error("Unipile is not configured.");
+  await throttleUnipileRequest();
+  const response = await fetch(
+    `${config.baseUrl}/api/v1/messages/${encodeURIComponent(input.messageId)}/attachments/${encodeURIComponent(input.attachmentId)}`,
+    { headers: { "x-api-key": config.apiKey }, signal: AbortSignal.timeout(UNIPILE_TIMEOUT_MS) },
+  );
+  if (!response.ok) {
+    throw new UnipileResponseError(
+      response.status,
+      `Unipile attachment request failed: ${response.status}`,
+      await response.text().catch(() => ""),
+    );
+  }
+  return response;
 }
 
 export async function listLinkedInChatAttendees(input: {
@@ -2324,7 +2429,7 @@ export async function listLinkedInInbox(input: {
   const lastMessageByChat = new Map<string, UnipileMessage>();
   for (const message of bulkMessages) {
     const cid = message.chat_id;
-    if (!cid) continue;
+    if (!cid || !isVisibleChatMessage(message)) continue;
     const existing = lastMessageByChat.get(cid);
     if (
       !existing ||
@@ -2398,8 +2503,8 @@ export async function listLinkedInInbox(input: {
         listLinkedInChatAttendees({ chatId }),
       ]);
       let messages = rawMessages
+        .filter(isVisibleChatMessage)
         .map((message) => normalizeChatMessage(message, chatId))
-        .filter((message) => message.body)
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       const messageAttendees = rawMessages
         .map(messageSenderAttendee)
