@@ -149,11 +149,14 @@ export async function draftUpcomingMessagePreview(input: {
   account: LinkedInAccount;
   // First step index the enrollment will look at after the wait completes.
   fromStepIndex: number;
+  messageEdits?: CampaignEnrollment["messageEdits"];
 }): Promise<CampaignEnrollment["nextMessageDraft"]> {
-  const { campaign, lead, account, fromStepIndex } = input;
+  const { campaign, lead, account, fromStepIndex, messageEdits } = input;
   const messageStepIndex = findNextScheduledStepIndex(campaign.steps, fromStepIndex);
   const messageStep = campaign.steps[messageStepIndex];
   if (!messageStep || messageStep.type !== "message") return undefined;
+  // The user already wrote this one, so there is nothing for AI to draft.
+  if (messageEdits?.[messageStep.id]?.trim()) return undefined;
   const rendered = renderTemplate(messageStep.messageTemplate, lead);
   if (rendered.natural && rendered.text) return undefined;
 
@@ -300,6 +303,7 @@ export async function applyConnectionAccepted(input: {
       lead,
       account: campaignAccount,
       fromStepIndex: draftFromStepIndex,
+      messageEdits: enrollment.messageEdits,
     });
 
     if (nextMessageDraft) {

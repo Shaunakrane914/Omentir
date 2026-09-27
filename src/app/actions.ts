@@ -11,6 +11,7 @@ import { buildCampaignSteps } from "@/lib/server/campaign-sequence";
 import {
   createAgent,
   createAgentApiKey,
+  getConversation,
   createCampaign,
   createOrGetGroup,
   createOwnedWorkspace,
@@ -67,7 +68,7 @@ import {
   onboardingSurveySentProperties,
 } from "@/lib/posthog-onboarding";
 import { executeScheduledActionNow } from "@/lib/server/automation";
-import { getLeadOutreach } from "@/lib/server/scheduled-actions";
+import { getLeadOutreach, saveScheduledMessageEdit } from "@/lib/server/scheduled-actions";
 import { analyzeWebsiteOrSearch, draftAgentSetupWithGemini } from "@/lib/server/gemini";
 import { hasActiveSubscription, requireActiveSubscription } from "@/lib/server/subscription";
 import {
@@ -871,10 +872,45 @@ export async function runScheduledActionNowAction(...args: Parameters<typeof run
   return withActionErrors(() => runScheduledActionNowActionImpl(...args));
 }
 
+async function saveScheduledMessageActionImpl(formData: FormData) {
+  const workspace = await requireWorkspace();
+  requireActiveSubscription(workspace);
+  const enrollmentId = String(formData.get("enrollmentId") || "").trim();
+  const stepId = String(formData.get("stepId") || "").trim();
+  // Empty body resets the step to the agent's template or AI.
+  const body = String(formData.get("body") || "").trim();
+  if (!enrollmentId || !stepId) throw new Error("Scheduled message id is required.");
+  if (body.length > 1900) throw new Error("Message is too long.");
+  await saveScheduledMessageEdit(workspace.id, enrollmentId, stepId, body);
+  revalidatePath("/actions");
+  revalidatePath("/agents");
+  revalidatePath("/leads");
+}
+
+export async function saveScheduledMessageAction(...args: Parameters<typeof saveScheduledMessageActionImpl>) {
+  return withActionErrors(() => saveScheduledMessageActionImpl(...args));
+}
+
 async function getLeadOutreachActionImpl(leadId: string) {
   const workspace = await requireWorkspace();
   requireActiveSubscription(workspace);
   return getLeadOutreach(workspace.id, String(leadId || "").trim());
+}
+
+// The messages sent to a lead and their replies, oldest first, for the /leads
+// panel's conversation view.
+async function getLeadConversationActionImpl(leadId: string) {
+  const workspace = await requireWorkspace();
+  requireActiveSubscription(workspace);
+  const conversation = await getConversation(workspace.id, String(leadId || "").trim());
+  return [...(conversation?.messages || [])]
+    .filter((message) => message.body.trim())
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map(({ id, direction, senderName, body, createdAt }) => ({ id, direction, senderName, body, createdAt }));
+}
+
+export async function getLeadConversationAction(...args: Parameters<typeof getLeadConversationActionImpl>) {
+  return withActionErrors(() => getLeadConversationActionImpl(...args));
 }
 
 export async function getLeadOutreachAction(...args: Parameters<typeof getLeadOutreachActionImpl>) {
@@ -1173,6 +1209,14 @@ async function updateAgentActionImpl(formData: FormData) {
     agent.targetGroupId,
     parseSendWindow(formData.get("sendWindow")),
   );
+  // The message sequence is on this form too. Without writing it back, edits to
+  // an existing agent's messages were dropped and the campaign kept sending its
+  // old (usually AI) messages. AI and manual sequences share one step layout,
+  // so in-flight enrollments keep their place.
+  const steps =
+    formData.get("aiDefaultOutreach") === "on" || formData.get("manualDefaultOutreach") === "on"
+      ? buildCampaignSteps(formData, workspace.settings.firstMessageDelayMinutes)
+      : undefined;
   const campaigns = (await listCampaigns(workspace.id)).filter(
     (campaign) => campaign.groupId === agent.targetGroupId,
   );
@@ -1182,6 +1226,7 @@ async function updateAgentActionImpl(formData: FormData) {
         replyHandling,
         bookingLink: bookingLink || "",
         ...(messageTone ? { messageTone } : {}),
+        ...(steps ? { steps } : {}),
       }),
     ),
   );

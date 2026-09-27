@@ -175,6 +175,20 @@ export function buildDefaultAiOutreachSteps(options?: {
   ];
 }
 
+// Manual outreach means the user writes every message. An empty message step
+// is AI-drafted at send time, so a sequence with fewer than three messages sent
+// AI text the user never wrote. Drop unwritten trailing messages (and the wait
+// before each) instead.
+function withoutTrailingEmptyMessages(steps: CampaignStep[]) {
+  const trimmed = [...steps];
+  while (trimmed.length > 1) {
+    const last = trimmed[trimmed.length - 1];
+    if (last.type !== "message" || last.messageTemplate.trim()) break;
+    trimmed.splice(-2);
+  }
+  return trimmed;
+}
+
 export function buildCampaignSteps(formData: FormData, fallbackFirstMessageDelayMinutes: number) {
   const connectionNote = String(formData.get("connectionNote") || "").trim();
   const includeNote = connectionNote.length > 0;
@@ -207,7 +221,7 @@ export function buildCampaignSteps(formData: FormData, fallbackFirstMessageDelay
           thirdWaitMinutes,
         })
       : useManualDefaultOutreach
-        ? [
+        ? withoutTrailingEmptyMessages([
             {
               id: "connect",
               type: "connect",
@@ -220,7 +234,7 @@ export function buildCampaignSteps(formData: FormData, fallbackFirstMessageDelay
             { id: "second-message", type: "message", messageTemplate: secondMessage },
             { id: "wait-third-message", type: "wait", delayMinutes: thirdWaitMinutes },
             { id: "third-message", type: "message", messageTemplate: thirdMessage },
-          ]
+          ])
         : [
             {
               id: "connect",

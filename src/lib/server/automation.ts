@@ -1046,6 +1046,7 @@ async function runEnrollment(
       lead,
       account,
       fromStepIndex: enrollment.currentStepIndex + 1,
+      messageEdits: enrollment.messageEdits,
     });
     // The wait's delay sets the EARLIEST the next message may go; the planner
     // then moves it to the first real slot at or after that inside the send
@@ -1377,7 +1378,11 @@ async function runEnrollment(
   // messages: a silent lead is not interested, so they are handed to the user
   // by email instead of getting another AI touch.
   let aiStage = 0;
-  if (rendered.natural && rendered.text) {
+  // A message the user wrote for this lead goes out exactly as written.
+  const userMessage = enrollment.messageEdits?.[step.id]?.trim();
+  if (userMessage) {
+    body = userMessage;
+  } else if (rendered.natural && rendered.text) {
     body = rendered.text;
   } else {
     // Dedicated Gemini call per message per lead, with everything it needs:

@@ -1,6 +1,10 @@
 import "server-only";
 
-import { buildActionTimeline, type ActionTimelineItem } from "./action-timeline";
+import {
+  buildActionTimeline,
+  type ActionTimelineItem,
+  type TimelineMessagePreview,
+} from "./action-timeline";
 import { findNextScheduledStepIndex } from "./campaign-sequence";
 import {
   canSendCampaignMessage,
@@ -16,6 +20,9 @@ import {
   getOutreachConversationFactsByLeadIds,
   listGroups,
   listLeadEnrollments,
+  getCampaign,
+  getCampaignEnrollment,
+  updateEnrollment,
 } from "./data";
 import {
   enrollmentIsTerminalForSequence,
@@ -41,6 +48,9 @@ export type ScheduledAction = {
   groupId?: string;
   canRunNow: boolean;
   isReply?: boolean;
+  // Set when "Next up" is a sequence message the user can rewrite before it
+  // sends: its step and the text to start from ("" when AI drafts at send).
+  editableMessage?: { stepId: string; body: string };
   blockedReason?: string;
   // True when the step is a message the connection has not been accepted for.
   // `at` is meaningless then: the automation parks the enrollment on the
@@ -140,6 +150,22 @@ export async function listScheduledActions(
       enrollment.nextMessageDraft && enrollment.nextMessageDraft.stepIndex === stepIndex
         ? enrollment.nextMessageDraft.body
         : undefined;
+    // What each unsent message step will say, in the order the send path picks:
+    // the user's own text, then a cleanly rendered template, then the AI draft.
+    const messagePreviews = Object.fromEntries(
+      campaign.steps.flatMap((candidate, index): [string, TimelineMessagePreview][] => {
+        if (candidate.type !== "message") return [];
+        const edited = enrollment.messageEdits?.[candidate.id]?.trim();
+        if (edited) return [[candidate.id, { message: edited, edited: true }]];
+        const candidateRendered = renderTemplate(candidate.messageTemplate, lead);
+        if (candidateRendered.natural && candidateRendered.text) {
+          return [[candidate.id, { message: candidateRendered.text }]];
+        }
+        const draft = enrollment.nextMessageDraft;
+        return [[candidate.id, draft?.stepIndex === index && draft.body.trim() ? { message: draft.body } : {}]];
+      }),
+    );
+    const upcomingMessage = step?.type === "message" ? messagePreviews[step.id]?.message : undefined;
     // Connection requests never get AI-drafted notes: either the user's
     // template renders cleanly or the invite goes out bare.
     const message = isReply
@@ -150,9 +176,9 @@ export async function listScheduledActions(
         ? step?.type === "connect" && step.includeNote && rendered?.natural && rendered.text
           ? rendered.text
           : "No note. LinkedIn connection request only."
-        : rendered?.natural && rendered.text
-          ? rendered.text
-          : storedDraft || "AI-personalized message will be generated at send time.";
+        : upcomingMessage || "AI-personalized message will be generated at send time.";
+    const editStepId =
+      !isReply && step?.type === "message" && !enrollment.pendingAction ? step.id : undefined;
 
     return [{
       id: enrollment.id,
@@ -167,6 +193,7 @@ export async function listScheduledActions(
       method: isConnection ? "LinkedIn connection request" : "LinkedIn message",
       canRunNow,
       isReply,
+      ...(editStepId ? { editableMessage: { stepId: editStepId, body: upcomingMessage || "" } } : {}),
       awaitingConnection,
       blockedReason: enrollment.pendingAction
         ? "This action is already being processed."
@@ -188,6 +215,7 @@ export async function listScheduledActions(
         connectionAccepted,
         sequenceStopped: isReply,
         repliedAt: facts?.lastInboundAt,
+        messages: messagePreviews,
       }),
       campaign: campaign.name,
       agent: agent?.name,
@@ -208,8 +236,43 @@ export async function listScheduledActions(
   return outreach.sort((a, b) => a.at.localeCompare(b.at));
 }
 
+// Saves the message the user wrote for one unsent sequence step of this lead.
+// The send path sends it verbatim in place of the template or AI draft. An
+// empty body removes it, handing the step back to the template or AI.
+export async function saveScheduledMessageEdit(
+  workspaceId: string,
+  enrollmentId: string,
+  stepId: string,
+  body: string,
+) {
+  const enrollment = await getCampaignEnrollment(workspaceId, enrollmentId);
+  if (
+    !enrollment ||
+    enrollmentIsTerminalForSequence(enrollment.status) ||
+    enrollment.status === "reply_received"
+  ) {
+    throw new Error("This message can no longer be edited.");
+  }
+  const campaign = await getCampaign(workspaceId, enrollment.campaignId);
+  const stepIndex = campaign ? campaign.steps.findIndex((step) => step.id === stepId) : -1;
+  if (!campaign || campaign.steps[stepIndex]?.type !== "message") {
+    throw new Error("This message is no longer part of the sequence.");
+  }
+  if (
+    stepIndex < enrollment.currentStepIndex ||
+    enrollment.pendingAction?.stepIndex === stepIndex
+  ) {
+    throw new Error("This message has already been sent.");
+  }
+  const messageEdits = { ...enrollment.messageEdits };
+  if (body) messageEdits[stepId] = body;
+  else delete messageEdits[stepId];
+  await updateEnrollment(workspaceId, enrollment.id, { messageEdits });
+}
+
 // What /leads shows for a lead with nothing queued: how far outreach got, why
 // it is not moving, and the steps that did or did not go out.
+
 export type LeadOutreachSummary = {
   detail: string;
   // 0 not contacted, 1 invited, 2 accepted, 3 messaged, 4 replied.

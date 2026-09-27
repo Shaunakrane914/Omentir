@@ -62,3 +62,41 @@ describe("buildActionTimeline", () => {
     );
   });
 });
+
+describe("buildActionTimeline message previews", () => {
+  test("shows what each unsent message will say before the invite is accepted, so users can review and rewrite it early", () => {
+    const timeline = buildActionTimeline({
+      steps,
+      stepIndex: 0,
+      scheduledAt: "2026-09-18T11:00:00.000Z",
+      connectionAccepted: false,
+      messages: {
+        "first-message": { message: "Hi Ada, my own words", edited: true },
+        "second-message": {},
+      },
+    });
+
+    expect(timeline.find((item) => item.id === "first-message")).toMatchObject({
+      status: "upcoming",
+      message: "Hi Ada, my own words",
+      edited: true,
+    });
+    expect(timeline.find((item) => item.id === "second-message")?.message).toBeUndefined();
+  });
+
+  test("never attaches a preview to a message that already went out, since a sent message cannot be edited", () => {
+    const timeline = buildActionTimeline({
+      steps,
+      stepIndex: 4,
+      scheduledAt: "2026-09-18T11:00:00.000Z",
+      sentMessageAts: ["2026-09-18T10:00:00.000Z"],
+      connectionAccepted: true,
+      messages: { "first-message": { message: "Stale text", edited: true } },
+    });
+
+    const sent = timeline.find((item) => item.id === "first-message");
+    expect(sent?.status).toBe("completed");
+    expect(sent?.message).toBeUndefined();
+    expect(sent?.edited).toBeUndefined();
+  });
+});

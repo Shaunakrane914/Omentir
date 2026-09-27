@@ -15,7 +15,13 @@ export type ActionTimelineItem = {
   at?: string;
   estimated?: boolean;
   note?: string;
+  // Unsent message steps only: the text that will go out (absent when AI
+  // drafts it at send time), and whether the user wrote it for this lead.
+  message?: string;
+  edited?: boolean;
 };
+
+export type TimelineMessagePreview = { message?: string; edited?: boolean };
 
 const AWAITING_ACCEPTANCE_NOTE =
   "Unlocks once they accept the connection request";
@@ -65,6 +71,8 @@ export function buildActionTimeline(input: {
   // so the schedule cannot still promise a canned follow-up.
   sequenceStopped?: boolean;
   repliedAt?: string;
+  // Previews for unsent message steps, keyed by step id.
+  messages?: Record<string, TimelineMessagePreview>;
 }): ActionTimelineItem[] {
   const { steps, stepIndex, scheduledAt, connectionSentAt, connectionAccepted } = input;
   const sentMessageAts = [...(input.sentMessageAts || [])];
@@ -81,15 +89,15 @@ export function buildActionTimeline(input: {
     }
 
     const kind = step.type === "connect" ? ("connection" as const) : ("message" as const);
-    const base = { id: step.id, title: stepTitle(step), kind };
     const waitMinutes = pendingWaitMinutes;
     pendingWaitMinutes = 0;
 
     if (index < stepIndex) {
       const at = kind === "connection" ? connectionSentAt : sentMessageAts.shift();
-      items.push({ ...base, status: "completed", at });
+      items.push({ id: step.id, title: stepTitle(step), kind, status: "completed", at });
       continue;
     }
+    const base = { id: step.id, title: stepTitle(step), kind, ...input.messages?.[step.id] };
 
     if (index === stepIndex) {
       if (kind === "message" && !connectionAccepted) {

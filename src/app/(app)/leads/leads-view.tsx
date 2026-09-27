@@ -28,7 +28,7 @@ import {
   CloseButton,
   OutreachPanelHeader,
   OutreachSection,
-  OutreachTimeline,
+  OutreachProgressSection,
   resultMessage,
 } from "@/app/(app)/actions/action-details";
 import { LeadAvatar } from "@/app/lead-avatar";
@@ -400,6 +400,7 @@ export default function LeadsView({ groups, leads }: LeadsViewProps) {
           }}
           onCancelStop={() => setConfirmingStopLeadId("")}
           onStop={() => stopOutreach(openAction)}
+          onMessageSaved={() => loadLeadOutreach(openLead.id, { quiet: true })}
           onClose={onClose}
           intro={<LeadSignal lead={openLead} groupName={group?.name} />}
           stage={Math.max(summary?.stage ?? 0, openAction.isReply ? 4 : 0)}
@@ -437,9 +438,13 @@ export default function LeadsView({ groups, leads }: LeadsViewProps) {
             <LeadSignal lead={openLead} groupName={group?.name} />
           </div>
           {summary ? (
-            <OutreachSection title="Progress">
-              <OutreachTimeline items={summary.timeline} timeZone={timeZone} stage={summary.stage} />
-            </OutreachSection>
+            <OutreachProgressSection
+              key={openLead.id}
+              leadId={openLead.id}
+              items={summary.timeline}
+              timeZone={timeZone}
+              stage={summary.stage}
+            />
           ) : null}
         </div>
       </aside>

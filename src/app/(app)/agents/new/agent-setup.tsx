@@ -29,7 +29,7 @@ import {
   agentFormOutreachDefaults,
   type AgentMessageTone,
 } from "@/lib/agent-setup-defaults";
-import type { Agent, CampaignReplyHandling, SendWindow } from "@/lib/server/types";
+import type { Agent, CampaignReplyHandling, CampaignStep, SendWindow } from "@/lib/server/types";
 import {
   INDUSTRY_SUGGESTIONS,
   KEYWORD_SUGGESTIONS,
@@ -89,6 +89,8 @@ type AgentSetupProps = {
   // agent row with no campaign; that is first-time outreach and must not use
   // the edit fallbacks (always / professional).
   hasExistingCampaign?: boolean;
+  // Saved campaign steps on edit, so the sequence opens with the real messages.
+  initialSteps?: CampaignStep[];
   initialReplyHandling?: CampaignReplyHandling;
   initialBookingLink?: string;
   linkedInAccounts?: { id: string; displayName: string; accountId: string; avatarUrl?: string }[];
@@ -367,8 +369,10 @@ function makeSeqAction(kind: SeqKind): SeqAction {
       title: "Connect request",
       enabled: true,
       mode: "ai",
+      // No {{leadReason}} in manual defaults: it never renders as prose, so a
+      // note or message containing it is dropped or rewritten by AI at send.
       manualMessage:
-        "Hi {{firstName}}, noticed {{company}} is focused on {{leadReason}} and thought it made sense to connect.",
+        "Hi {{firstName}}, came across what {{company}} is working on and thought it made sense to connect.",
       aiPrompt:
         "Write a short, friendly connection note that references {{leadReason}} and {{company}}. Under 280 characters.",
       goal: "Open the door",
@@ -385,7 +389,7 @@ function makeSeqAction(kind: SeqKind): SeqAction {
       enabled: true,
       mode: "ai",
       manualMessage:
-        "Hi {{firstName}},\nI noticed {{company}} is focused on {{leadReason}}. Worth a quick 15-min chat next week?",
+        "Hi {{firstName}},\nI came across what {{company}} is working on. Worth a quick 15-min chat next week?",
       aiPrompt:
         "Write a friendly first message referencing {{signalSource}} and {{leadReason}}. End with a clear ask. Under 300 characters.",
       goal: "Book a meeting",
@@ -408,6 +412,34 @@ function makeSeqAction(kind: SeqKind): SeqAction {
     waitValue: 18,
     waitUnit: "hours",
   };
+}
+
+// Rebuilds the manual sequence from a saved campaign so editing an agent shows
+// the messages it actually sends. Null for AI-written sequences (no message has
+// a template), which keep the editor defaults.
+function seqActionsFromSteps(steps: CampaignStep[] | undefined): SeqAction[] | null {
+  if (!steps?.some((step) => step.type === "message" && step.messageTemplate.trim())) return null;
+  const connect = makeSeqAction("connect");
+  const connectStep = steps.find((step) => step.type === "connect");
+  if (connectStep?.type === "connect" && connectStep.includeNote && connectStep.noteTemplate.trim()) {
+    connect.mode = "manual";
+    connect.manualMessage = connectStep.noteTemplate;
+  }
+  const messages: SeqAction[] = [];
+  steps.forEach((step, index) => {
+    if (step.type !== "message" || !step.messageTemplate.trim()) return;
+    const before = steps[index - 1];
+    const minutes = before?.type === "wait" ? before.delayMinutes : 0;
+    const waitUnit = minutes % 1440 === 0 ? "days" : minutes % 60 === 0 ? "hours" : "minutes";
+    messages.push({
+      ...makeSeqAction(messages.length ? "follow" : "message"),
+      mode: "manual",
+      manualMessage: step.messageTemplate,
+      waitUnit,
+      waitValue: waitUnit === "days" ? minutes / 1440 : waitUnit === "hours" ? minutes / 60 : minutes,
+    });
+  });
+  return [connect, ...messages];
 }
 
 function SeqIconRich({ kind, colorClass }: { kind: SeqKind; colorClass: string }) {
@@ -732,6 +764,7 @@ export default function AgentSetup({
   initialSendWindow,
   initialMessageTone,
   hasExistingCampaign = false,
+  initialSteps,
   initialReplyHandling,
   initialBookingLink,
   linkedInAccounts = [],
@@ -802,8 +835,8 @@ export default function AgentSetup({
   );
   // Steal customers always uses AI outreach: messages need post+comment context
   // the user cannot paste into a static template.
-  const [outreachMode, setOutreachMode] = useState<"automatic" | "manual">(
-    stealCustomers ? "automatic" : "automatic",
+  const [outreachMode, setOutreachMode] = useState<"automatic" | "manual">(() =>
+    !stealCustomers && seqActionsFromSteps(initialSteps) ? "manual" : "automatic",
   );
   const outreachDefaults = agentFormOutreachDefaults({
     storedSendWindow: initialSendWindow,
@@ -854,11 +887,13 @@ export default function AgentSetup({
   const [signalKeywords, setSignalKeywords] = useState<string[]>(initialAgent?.signalSources?.keywords ?? []);
   const [competitorUrls, setCompetitorUrls] = useState<string[]>(initialAgent?.signalSources?.competitorUrls || []);
   const [founderUrls, setFounderUrls] = useState<string[]>(initialAgent?.signalSources?.founderUrls || []);
-  const [actions, setActions] = useState<SeqAction[]>(() => [
-    makeSeqAction("connect"),
-    makeSeqAction("message"),
-    makeSeqAction("follow"),
-  ]);
+  const [actions, setActions] = useState<SeqAction[]>(() =>
+    (!stealCustomers && seqActionsFromSteps(initialSteps)) || [
+      makeSeqAction("connect"),
+      makeSeqAction("message"),
+      makeSeqAction("follow"),
+    ],
+  );
 
   // Company profile (editable inline via modal)
   const [companyName, setCompanyName] = useState(profile?.companyName ?? "");

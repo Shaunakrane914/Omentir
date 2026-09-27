@@ -460,6 +460,9 @@ export type CampaignEnrollment = {
     body: string;
     createdAt: string;
   };
+  // Messages the user wrote for this lead on /leads or /actions, keyed by
+  // campaign step id. Sent verbatim in place of the step's template or AI draft.
+  messageEdits?: Record<string, string>;
   pendingAction?: {
     kind: "connection" | "message" | "reply";
     stepIndex: number;

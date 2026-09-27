@@ -11,7 +11,7 @@ export function renderTemplate(
 ) {
   let natural = true;
   const rendered = text.replace(
-    /\{\{(firstName|name|company|title|leadReason|signalSource)\}\}/g,
+    /\{\{(firstName|lastName|name|company|title|leadReason|signalSource)\}\}/g,
     (_match, token: string) => {
       if (token === "leadReason" || token === "signalSource") {
         natural = false;
@@ -20,6 +20,8 @@ export function renderTemplate(
       const value =
         token === "firstName"
           ? lead.name.split(" ")[0] || lead.name
+          : token === "lastName"
+            ? lead.name.split(" ").slice(1).join(" ")
           : token === "name"
             ? lead.name
             : token === "company"
