@@ -34,6 +34,21 @@ export function renderTemplate(
   return { text: rendered.trim(), natural };
 }
 
+// The text a sequence message step sends without AI, in the order the send
+// path, the Actions/Leads preview and AI pre-drafting all follow: the message
+// the user wrote for this lead, then the step's template if it renders
+// cleanly. Undefined means AI drafts it at send time.
+export function writtenSequenceMessage(
+  step: { id: string; messageTemplate: string },
+  lead: Pick<Lead, "name" | "company" | "title">,
+  messageEdits: Record<string, string> | undefined,
+) {
+  const edited = messageEdits?.[step.id]?.trim();
+  if (edited) return { text: edited, edited: true };
+  const rendered = renderTemplate(step.messageTemplate, lead);
+  return rendered.natural && rendered.text ? { text: rendered.text, edited: false } : undefined;
+}
+
 // LinkedIn anonymizes out-of-network/private profiles as "LinkedIn Member"
 // (deleted accounts show as "LinkedIn User"). These carry no usable identity
 // and can never be contacted, so they must not become leads or receive

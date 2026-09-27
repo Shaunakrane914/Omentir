@@ -98,6 +98,7 @@ import {
   shouldRetryConnectionWithoutNote,
   isAnonymousLinkedInProfile,
   renderTemplate,
+  writtenSequenceMessage,
 } from "./outreach-rules";
 import {
   shouldHaltOutreachSend,
@@ -1371,19 +1372,19 @@ async function runEnrollment(
   }
 
   const profile = await getProductProfile(enrollment.workspaceId);
-  const rendered = renderTemplate(step.messageTemplate, lead);
   let body: string;
   // Stage of this message when AI-drafted (0 for user-written templates).
   // AI-run sequences hard-stop after MAX_AI_SEQUENCE_MESSAGES unanswered
   // messages: a silent lead is not interested, so they are handed to the user
   // by email instead of getting another AI touch.
   let aiStage = 0;
-  // A message the user wrote for this lead goes out exactly as written.
-  const userMessage = enrollment.messageEdits?.[step.id]?.trim();
-  if (userMessage) {
-    body = userMessage;
-  } else if (rendered.natural && rendered.text) {
-    body = rendered.text;
+  // A message the user wrote for this lead goes out exactly as written. Read
+  // it fresh: the tick loads every enrollment up front, so an edit saved while
+  // the tick works through earlier leads is missing from `enrollment`.
+  const latestEnrollment = await getCampaignEnrollment(enrollment.workspaceId, enrollment.id);
+  const written = writtenSequenceMessage(step, lead, (latestEnrollment ?? enrollment).messageEdits);
+  if (written) {
+    body = written.text;
   } else {
     // Dedicated Gemini call per message per lead, with everything it needs:
     // which message of the sequence this is (each stage has its own intent),

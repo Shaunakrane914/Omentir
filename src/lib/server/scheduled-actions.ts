@@ -10,6 +10,7 @@ import {
   canSendCampaignMessage,
   hasInviteResendBlockedError,
   renderTemplate,
+  writtenSequenceMessage,
 } from "./outreach-rules";
 import {
   isSourcedByLeadsOnlyAgent,
@@ -155,11 +156,9 @@ export async function listScheduledActions(
     const messagePreviews = Object.fromEntries(
       campaign.steps.flatMap((candidate, index): [string, TimelineMessagePreview][] => {
         if (candidate.type !== "message") return [];
-        const edited = enrollment.messageEdits?.[candidate.id]?.trim();
-        if (edited) return [[candidate.id, { message: edited, edited: true }]];
-        const candidateRendered = renderTemplate(candidate.messageTemplate, lead);
-        if (candidateRendered.natural && candidateRendered.text) {
-          return [[candidate.id, { message: candidateRendered.text }]];
+        const written = writtenSequenceMessage(candidate, lead, enrollment.messageEdits);
+        if (written) {
+          return [[candidate.id, { message: written.text, ...(written.edited ? { edited: true } : {}) }]];
         }
         const draft = enrollment.nextMessageDraft;
         return [[candidate.id, draft?.stepIndex === index && draft.body.trim() ? { message: draft.body } : {}]];

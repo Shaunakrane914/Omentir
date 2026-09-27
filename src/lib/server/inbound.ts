@@ -32,7 +32,7 @@ import { sendWindowTimeZoneForLead } from "./lead-time-zone";
 import { nextAiReplyAt } from "./send-schedule";
 import { capturePostHogEvent } from "@/lib/posthog-server";
 import { classifyReplyIntent, draftCampaignMessage, type ReplyIntentClassification } from "./gemini";
-import { renderTemplate } from "./outreach-rules";
+import { writtenSequenceMessage } from "./outreach-rules";
 import {
   enrollmentBlocksAiReply,
   isHotReply,
@@ -155,10 +155,8 @@ export async function draftUpcomingMessagePreview(input: {
   const messageStepIndex = findNextScheduledStepIndex(campaign.steps, fromStepIndex);
   const messageStep = campaign.steps[messageStepIndex];
   if (!messageStep || messageStep.type !== "message") return undefined;
-  // The user already wrote this one, so there is nothing for AI to draft.
-  if (messageEdits?.[messageStep.id]?.trim()) return undefined;
-  const rendered = renderTemplate(messageStep.messageTemplate, lead);
-  if (rendered.natural && rendered.text) return undefined;
+  // The user wrote this one, or the template renders cleanly: nothing to draft.
+  if (writtenSequenceMessage(messageStep, lead, messageEdits)) return undefined;
 
   try {
     const sequencePosition = campaign.steps
