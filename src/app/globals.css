@@ -3834,6 +3834,26 @@ html.marketing-menu-open [data-marketing-header] {
     outline: 1px solid rgba(194, 208, 170, 0.55);
     outline-offset: 1px;
   }
+
+  /* Less chrome on phones: the fit score tells the lead story, the chat
+     bubbles tell the message story. */
+  .home-mock-app .home-mock-people li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .home-mock-app .home-mock-people em[data-status],
+  .home-mock-app .home-mock-search,
+  .home-mock-app .home-mock-when {
+    display: none;
+  }
+
+  .home-mock-app * {
+    scrollbar-width: none;
+  }
+
+  .home-mock-app *::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .home-mock-threadcol .home-mock-threads {
