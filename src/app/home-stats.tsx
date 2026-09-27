@@ -15,7 +15,7 @@ export default function HomeStats() {
       >
         Statistics
       </p>
-      <div className="mt-8 grid gap-3 md:mt-10 md:grid-cols-3">
+      <div className="mt-8 grid grid-cols-3 gap-2 md:mt-10 md:gap-3">
         {STATS.map((stat) => (
           <div key={stat.label} className="home-green-panel home-stat">
             <p className="home-stat-value">{stat.value}</p>

@@ -8503,19 +8503,20 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1.75rem;
-  padding: 1.5rem;
+  gap: 1rem;
+  padding: 0.875rem 0.75rem;
 }
 
 @media (min-width: 768px) {
   .home-stat {
+    gap: 1.75rem;
     min-height: 15rem;
     padding: 1.75rem 1.5rem;
   }
 }
 
 .home-stat-value {
-  font-size: clamp(3.5rem, 32cqi, 6.5rem);
+  font-size: clamp(1.5rem, 32cqi, 6.5rem);
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 0.9;
@@ -8523,8 +8524,14 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
 }
 
 .home-stat-label {
-  font-size: 1.0625rem;
+  font-size: 0.75rem;
   color: var(--site-text-2);
+}
+
+@media (min-width: 768px) {
+  .home-stat-label {
+    font-size: 1.0625rem;
+  }
 }
 
 /* Blog post: Cursor-style contents card and calmer body rhythm. */
