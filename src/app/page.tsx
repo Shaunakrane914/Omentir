@@ -8,6 +8,7 @@ import MarketingClosingCta from "./marketing-closing-cta";
 import { MarketingFooter, MarketingHeader } from "./marketing-shell";
 import CustomerLogoWall from "./customer-logo-wall";
 import JsonLd from "./json-ld";
+import PlanAwarePricingCards from "./plan-aware-pricing-cards";
 import {
   createFAQJsonLd,
   createPageMetadata,
@@ -99,6 +100,19 @@ export default function Home() {
       </div>
 
       <HomeCapabilitySlides />
+
+      <section
+        id="pricing"
+        aria-labelledby="home-pricing-heading"
+        className="omentir-primary-width min-w-0 scroll-mt-24 py-12 md:py-20"
+      >
+        <div className="flex flex-col gap-8 md:gap-10 xl:flex-row xl:items-start xl:justify-between">
+          <h2 id="home-pricing-heading" className="faq-section-heading">
+            Pricing
+          </h2>
+          <PlanAwarePricingCards site className="w-full max-w-4xl" />
+        </div>
+      </section>
 
       <FaqSplitSection items={faqItems} className="py-12 md:py-20" />
 

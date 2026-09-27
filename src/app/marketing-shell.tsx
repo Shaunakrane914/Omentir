@@ -245,7 +245,7 @@ export function MarketingFooter() {
           ))}
           <ConnectColumn />
         </div>
-        <div className="mt-14 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="site-footer-muted flex select-none items-center gap-2">
             <LogoMark className="h-4 w-4" />
             &copy; {new Date().getFullYear()} Omentir. Open Source, MIT licensed.

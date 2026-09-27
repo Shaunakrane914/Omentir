@@ -130,7 +130,7 @@ export default function CustomerLogoWall({
           Teams using Omentir
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 md:mt-10 md:flex-nowrap md:justify-between md:gap-2">
+        <div className="mt-8 grid grid-cols-4 gap-2 md:mt-10 md:flex md:flex-nowrap md:items-center md:justify-between">
           {CUSTOMERS.map((customer) => (
             <LogoLink key={customer.name} customer={customer} />
           ))}
