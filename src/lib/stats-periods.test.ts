@@ -78,7 +78,7 @@ test("hourly is not offered past a week, where it would draw hundreds of unreada
 test("a hand-edited URL falls back to defaults instead of breaking the page", () => {
   const params = new URLSearchParams({ period: "forever", offset: "-3", filters: "{not json" });
   const query = parseStatsQuery((name) => params.get(name));
-  expect(query).toEqual({ period: "30d", offset: 0, interval: "day", filters: [] });
+  expect(query).toEqual({ period: "24h", offset: 0, interval: "hour", filters: [] });
 });
 
  test("last 24 hours is an exact rolling window even across project midnight", () => {

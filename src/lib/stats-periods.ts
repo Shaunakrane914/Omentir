@@ -21,6 +21,9 @@ export const STATS_PERIODS = [
 ] as const;
 
 export type StatsPeriod = (typeof STATS_PERIODS)[number]["key"];
+
+/** Period shown when the URL has no (or an unknown) ?period=. */
+export const DEFAULT_STATS_PERIOD: StatsPeriod = "24h";
 export type StatsInterval = "hour" | "day" | "week" | "month";
 
 export type StatsQuery = {
@@ -194,7 +197,7 @@ export function bucketsBetween(from: Date, to: Date, interval: StatsInterval) {
 /** Page state from the URL (?period=&offset=&interval=&filters=). */
 export function parseStatsQuery(get: (name: string) => string | null | undefined): StatsQuery {
   const periodParam = get("period");
-  const period: StatsPeriod = isStatsPeriod(periodParam) ? periodParam : "30d";
+  const period: StatsPeriod = isStatsPeriod(periodParam) ? periodParam : DEFAULT_STATS_PERIOD;
   const intervalParam = get("interval");
   const interval: StatsInterval = isStatsInterval(intervalParam) ? intervalParam : defaultInterval(period);
   let filters: StatsQuery["filters"] = [];

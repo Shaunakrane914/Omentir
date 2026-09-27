@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
+  DEFAULT_STATS_PERIOD,
   allowedIntervals,
   defaultInterval,
   isStatsInterval,
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
   const section = params.get("section") as StatsSection;
   if (!SECTIONS.has(section)) return NextResponse.json({ error: "Unknown section." }, { status: 400 });
   const periodParam = params.get("period");
-  const period = isStatsPeriod(periodParam) ? periodParam : "30d";
+  const period = isStatsPeriod(periodParam) ? periodParam : DEFAULT_STATS_PERIOD;
   const offset = Math.min(Math.max(Number(params.get("offset")) || 0, 0), 500);
   const window = Math.floor(Date.now() / STATS_REFRESH_MS);
   const range = resolveStatsRange(period, offset, window * STATS_REFRESH_MS);

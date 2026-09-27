@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  DEFAULT_STATS_PERIOD,
   STATS_INTERVALS,
   STATS_PERIODS,
   allowedIntervals,
@@ -47,7 +48,7 @@ const VIEWS: { key: StatsView; label: string }[] = [
 function writeQuery(query: Query, view: StatsView) {
   const params = new URLSearchParams();
   if (view !== "web") params.set("view", view);
-  if (query.period !== "30d") params.set("period", query.period);
+  if (query.period !== DEFAULT_STATS_PERIOD) params.set("period", query.period);
   if (query.offset) params.set("offset", String(query.offset));
   if (query.interval !== defaultInterval(query.period)) params.set("interval", query.interval);
   if (query.filters.length) params.set("filters", JSON.stringify(query.filters));
