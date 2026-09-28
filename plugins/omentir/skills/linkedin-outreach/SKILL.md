@@ -1,9 +1,9 @@
 ---
 name: linkedin-outreach
 description: >
-  Run LinkedIn prospecting and outreach through Omentir MCP. Use this when a
-  Grok Bot or Cursor agent should find people, score fit, draft messages, or
-  check campaigns. Never sign into LinkedIn on the Bot computer.
+  Run LinkedIn prospecting and outreach through Omentir MCP. Use this when
+  Claude, a Cursor agent, or Grok Bot should find people, score fit, draft
+  messages, or check campaigns. Never sign into LinkedIn in a browser.
 ---
 
 # LinkedIn outreach through Omentir

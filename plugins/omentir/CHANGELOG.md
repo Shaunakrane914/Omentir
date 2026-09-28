@@ -2,6 +2,11 @@
 
 All notable changes to this plugin will be documented here.
 
+## 1.2.0 - Claude directory
+
+- Added a Claude plugin manifest (`.claude-plugin/plugin.json`) that reuses the same `mcp.json` and skill.
+- README now lists exactly what the plugin runs and sends, plus a privacy section.
+
 ## 1.1.0 - workspace switch
 
 - Agents can list the owner's workspaces and rebind the same token with `omentir_switch_workspace`.
