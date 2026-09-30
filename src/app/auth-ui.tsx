@@ -74,34 +74,6 @@ export function GoogleMark() {
   );
 }
 
-export function AuthSelect({
-  label,
-  name,
-  options,
-  className = "",
-}: {
-  label: string;
-  name: string;
-  options: string[];
-  className?: string;
-}) {
-  return (
-    <label className={`block ${className}`}>
-      <span className="auth-label">{label}</span>
-      <select className="auth-input" name={name} required defaultValue="">
-        <option value="" disabled>
-          Select one
-        </option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 export function AuthSwitchLine({ children }: { children: ReactNode }) {
   return <p className="auth-muted mt-6 text-center text-[13px]">{children}</p>;
 }

@@ -15,6 +15,8 @@ import JsonLd from "../json-ld";
 import {
   ArticleCrumbs,
   articlePathCrumbs,
+  CalLinkCards,
+  CalPageHero,
   MarketingFooter,
   MarketingHeader,
   type ArticleCrumb,
@@ -75,7 +77,9 @@ export function SeoPageChrome({
   return (
     <>
       <JsonLd id={jsonLdId} data={jsonLd} />
-      <main className="site-theme min-h-screen overflow-x-hidden">
+      {/* overflow-x-clip, not hidden: hidden makes <main> a scroll box and
+          sticky sidebars (integration facts) would stop sticking. */}
+      <main className="site-theme min-h-screen overflow-x-clip">
         <MarketingHeader transparentAtTop />
         {children}
         <MarketingFooter />
@@ -133,44 +137,20 @@ export function SeoDocLayout({
   path?: string;
   width?: "primary" | "moderate" | "secondary";
 }) {
-  const heading = (
-    <>
-      <h1 className="text-[1.75rem] leading-tight tracking-[-0.0125em] text-[var(--site-text)] md:text-[2rem]">
-        {title}
-      </h1>
-      {afterTitle}
-      {description ? (
-        <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--site-text-2)]">{description}</p>
-      ) : null}
-    </>
-  );
-
-  // Reading pages take cursor.com's article layout: crumbs in a sticky left
-  // column, one text column beside them. Wider directory pages keep a single
-  // full-width column with the same heading.
-  if (width === "secondary") {
-    return (
-      <div className="omentir-primary-width grid min-w-0 gap-6 pb-20 pt-28 md:grid-cols-[12rem_minmax(0,42rem)] md:gap-16 md:pb-28 md:pt-32 lg:grid-cols-[14rem_minmax(0,42rem)] lg:gap-24">
-        <div className="md:sticky md:top-28 md:self-start">
-          <SeoHeroCrumbs crumbs={crumbs} className="" />
-        </div>
-        <Tag className="min-w-0 text-left">
-          {heading}
-          <div className="mt-10 space-y-12 md:mt-12">{children}</div>
-          {path ? <MarkdownTwinLink path={path} title={title} /> : null}
-        </Tag>
-      </div>
-    );
-  }
-
-  const widthClass = width === "primary" ? "omentir-primary-width" : "omentir-moderate-width";
+  // Calendly-style: the cream hero panel on top, then one centered column
+  // (reading width for articles, wider for directories).
+  const widthClass =
+    width === "primary" ? "cal-read-wide" : width === "moderate" ? "cal-read-moderate" : "";
   return (
-    <Tag className={`${widthClass} min-w-0 pb-20 pt-28 text-left md:pb-28 md:pt-32`}>
-      <SeoHeroCrumbs crumbs={crumbs} className="mb-8" />
-      {heading}
-      <div className="mt-10 space-y-12 md:mt-12">{children}</div>
-      {path ? <MarkdownTwinLink path={path} title={title} /> : null}
-    </Tag>
+    <>
+      <CalPageHero crumbs={crumbs} title={title} description={description} />
+      <Tag className={`cal-read ${widthClass} min-w-0 text-left`}>
+        {/* afterTitle is the page banner: first thing in the column. */}
+        {afterTitle ? <div className="mb-14 md:mb-16">{afterTitle}</div> : null}
+        <div className="space-y-14 md:space-y-16">{children}</div>
+        {path ? <MarkdownTwinLink path={path} title={title} /> : null}
+      </Tag>
+    </>
   );
 }
 
@@ -179,20 +159,7 @@ export function SeoTitleList({
 }: {
   items: ReadonlyArray<{ href: string; label: string }>;
 }) {
-  return (
-    <ul className="divide-y divide-[var(--md-sys-color-outline-variant)] border-b border-[var(--md-sys-color-outline-variant)]">
-      {items.map((item) => (
-        <li key={item.href}>
-          <Link
-            href={item.href}
-            className="group block py-4 text-[var(--md-sys-color-on-surface)] transition-colors hover:text-[var(--md-sys-color-primary)]"
-          >
-            {item.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
+  return <CalLinkCards links={items} />;
 }
 
 export function SeoHero({
@@ -202,7 +169,6 @@ export function SeoHero({
   crumbs,
   media,
   fullHeight = false,
-  compact = false,
   sentence = false,
 }: {
   title: string;
@@ -213,7 +179,8 @@ export function SeoHero({
   media?: ReactNode;
   /** Full-viewport marketing hero. Comparison and integration pages use this. */
   fullHeight?: boolean;
-  /** Title and lede stay in the hero, without filling half the viewport. */
+  /** Unused since the hero became the compact Calendly panel; kept so
+   *  existing callers still type-check. */
   compact?: boolean;
   /** Smaller title and lede. Feature pages use this so longer H1s fit. */
   sentence?: boolean;
@@ -247,7 +214,7 @@ export function SeoHero({
               </p>
             ) : null}
             {actions ? (
-              <div className="m3-btn-pair mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">{actions}</div>
+              <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">{actions}</div>
             ) : null}
           </div>
           {media ? <div className="hidden min-w-0 lg:mt-16 lg:block">{media}</div> : null}
@@ -257,37 +224,13 @@ export function SeoHero({
   }
 
   return (
-    <section className="relative w-full border-b border-[var(--md-sys-color-outline-variant)]">
-      <div
-        className={`grid w-full ${compact ? "" : "min-h-[52vh] sm:min-h-[58vh]"}`}
-        style={{ gridTemplate: '"hero" 1fr / 1fr' }}
-      >
-        <div
-          className="relative z-10 flex min-w-0 flex-col justify-center pb-12 pt-28 sm:pb-16 sm:pt-36 lg:pt-40"
-          style={{ gridArea: "hero" }}
-        >
-          <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col items-start px-4 text-left sm:px-8">
-            {crumbs && crumbs.length > 0 ? <SeoHeroCrumbs crumbs={crumbs} /> : null}
-            <h1
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="w-full min-w-0 max-w-5xl text-[2rem] font-semibold leading-[1.12] tracking-tight text-[var(--md-sys-color-on-surface)] min-[380px]:text-[2.25rem] sm:text-5xl sm:leading-tight lg:text-6xl lg:leading-tight"
-            >
-              {title}
-            </h1>
-            {description ? (
-              <p className="mt-6 w-full min-w-0 max-w-3xl text-base leading-8 text-[var(--md-sys-color-on-surface-variant)] sm:text-lg">
-                {description}
-              </p>
-            ) : null}
-            {actions ? (
-              <div className="m3-btn-pair mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                {actions}
-              </div>
-            ) : null}
-          </div>
+    <CalPageHero crumbs={crumbs} title={title} description={description}>
+      {actions ? (
+        <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+          {actions}
         </div>
-      </div>
-    </section>
+      ) : null}
+    </CalPageHero>
   );
 }
 
@@ -311,7 +254,7 @@ export function SeoBanner({
   height?: number;
 }) {
   return (
-    <figure className="overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)]">
+    <figure className="overflow-hidden rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)]">
       <Image
         src={src}
         alt={alt}
@@ -330,32 +273,24 @@ export function SetupSteps({ steps }: { steps: ReadonlyArray<{ title: string; de
   if (steps.length === 0) return null;
   return (
     <section id="setup-steps">
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-2xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-      >
-        Setup
-      </h2>
-      <ol className="mt-6 space-y-4">
+      <h2 className="cal-read-h2">Setup</h2>
+      {/* Step cards in a grid with a big step number, so setup reads at a
+          glance instead of as a stacked list. */}
+      <ol className="cal-steps-grid mt-6">
         {steps.map((step, index) => {
           const seen = new Set<string>();
           return (
-          <li
-            key={step.title}
-            className="grid gap-3 rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-5 sm:grid-cols-[auto_1fr] sm:gap-5"
-          >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--md-sys-color-primary)] text-sm font-semibold text-[var(--md-sys-color-on-primary)]">
-              {index + 1}
-            </span>
-            <div>
-              <p className="font-semibold text-[var(--md-sys-color-on-surface)]">
+            <li key={step.title} className="cal-step-card">
+              <span className="cal-step-num" aria-hidden="true">
+                {index + 1}
+              </span>
+              <p className="font-medium text-[var(--site-text)]">
                 {linkifyProducts(step.title, seen)}
               </p>
-              <p className="mt-1 text-sm leading-7 text-[var(--md-sys-color-on-surface-variant)]">
+              <p className="mt-1.5 text-sm leading-6 text-[var(--cal-muted)]">
                 {linkifyProducts(step.description, seen)}
               </p>
-            </div>
-          </li>
+            </li>
           );
         })}
       </ol>
@@ -406,28 +341,10 @@ export function RelatedLinks({ links }: { links: SeoRelatedLink[] }) {
   if (links.length === 0) return null;
   return (
     <section id="related">
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-      >
-        Related
-      </h2>
-      <ul className="mt-6 divide-y divide-[var(--md-sys-color-outline-variant)] border-b border-[var(--md-sys-color-outline-variant)]">
-        {links.map((link) => (
-          <li key={link.href}>
-            <Link href={link.href} className="group block py-4">
-              <span className="font-semibold text-[var(--md-sys-color-on-surface)] transition-colors group-hover:text-[var(--md-sys-color-primary)]">
-                {link.label}
-              </span>
-              {link.description ? (
-                <span className="mt-1 block text-sm leading-6 text-[var(--md-sys-color-on-surface-variant)]">
-                  {link.description}
-                </span>
-              ) : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <h2 className="cal-read-h2">Related</h2>
+      <div className="mt-6">
+        <CalLinkCards links={links} />
+      </div>
     </section>
   );
 }
@@ -442,23 +359,8 @@ export function FaqBlock({
   if (page.faqItems.length === 0) return null;
   return (
     <section id="faq">
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className={
-          branded
-            ? "text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--md-sys-color-on-surface)] md:text-3xl"
-            : "border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-2xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        }
-      >
-        {branded ? (
-          <>
-            Frequently asked <span className="text-gradient-brand">questions</span>
-          </>
-        ) : (
-          "Frequently asked questions"
-        )}
-      </h2>
-      <div className={branded ? "mt-6 md:mt-8" : "mt-2"}>
+      <h2 className="cal-read-h2">Frequently asked questions</h2>
+      <div className={branded ? "mt-6 md:mt-8" : "mt-4"}>
         <FaqAccordion
           items={page.faqItems.map((item) => {
             const seen = new Set<string>();
@@ -498,6 +400,40 @@ export function SectionProse({
   );
 }
 
+/** A section's body without its heading: paragraphs, a checklist for any
+ *  bullets, and a prompt box for code. Shared by ArticleSection and the
+ *  feature page's cards. */
+export function SectionBody({
+  id,
+  paragraphs,
+  bullets,
+  code,
+  className = "",
+}: {
+  id: string;
+  paragraphs: string[];
+  bullets?: string[];
+  code?: string;
+  className?: string;
+}) {
+  const seen = new Set<string>();
+  return (
+    <div className={`space-y-4 text-left ${className}`}>
+      {paragraphs.map((paragraph, index) => (
+        <p key={`${id}-p-${index}`}>{linkifySeoCopy(paragraph, seen)}</p>
+      ))}
+      {bullets && bullets.length > 0 ? (
+        <ul className="cal-checklist">
+          {bullets.map((bullet, index) => (
+            <li key={`${id}-b-${index}`}>{linkifySeoCopy(bullet, seen)}</li>
+          ))}
+        </ul>
+      ) : null}
+      {code ? <PromptCopyBox prompt={code} /> : null}
+    </div>
+  );
+}
+
 export function ArticleSection({
   id,
   heading,
@@ -511,30 +447,16 @@ export function ArticleSection({
   bullets?: string[];
   code?: string;
 }) {
-  const seen = new Set<string>();
   return (
     <section id={id} className="scroll-mt-28">
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-left text-2xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-      >
-        {heading}
-      </h2>
-      <div className="mt-5 space-y-4 text-left text-base leading-8 text-[var(--md-sys-color-on-surface)]">
-        {paragraphs.map((paragraph, index) => (
-          <p key={`${id}-p-${index}`}>{linkifySeoCopy(paragraph, seen)}</p>
-        ))}
-        {bullets && bullets.length > 0 ? (
-          <ul className="list-disc space-y-2 pl-5 text-[var(--md-sys-color-on-surface-variant)]">
-            {bullets.map((bullet, index) => (
-              <li key={`${id}-b-${index}`} className="leading-7">
-                {linkifySeoCopy(bullet, seen)}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {code ? <PromptCopyBox prompt={code} /> : null}
-      </div>
+      <h2 className="cal-read-h2 text-left">{heading}</h2>
+      <SectionBody
+        id={id}
+        paragraphs={paragraphs}
+        bullets={bullets}
+        code={code}
+        className="mt-5 text-base leading-8 text-[var(--md-sys-color-on-surface)]"
+      />
     </section>
   );
 }
@@ -552,57 +474,17 @@ export function CtaBlock({
 }) {
   const primary = page.primaryCta ?? { label: "Start with Omentir", href: "/signup" };
   const secondary = page.secondaryCta ?? { label: "See pricing", href: "/pricing" };
-  if (boxed) {
-    return (
-      <section
-        aria-label="Get started"
-        className="rounded-3xl border-2 border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface-container)] px-6 py-8 text-center md:px-10 md:py-10"
-      >
-        <p className="text-lg font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]">
-          {title}
-        </p>
-        <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[var(--md-sys-color-on-surface-variant)]">
-          {body}
-        </p>
-        <div className="m3-btn-pair mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href={primary.href}
-            className="m3-btn m3-btn-filled m3-btn--hero w-full cursor-pointer sm:w-auto"
-          >
-            {primary.label}
-          </Link>
-          <Link
-            href={secondary.href}
-            className="m3-btn m3-btn-outlined m3-btn--hero w-full sm:w-auto"
-          >
-            {secondary.label}
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  // Same rounded closing panel either way; `boxed` only tightens the gap
+  // above it on pages that already end in a card.
   return (
-    <section
-      aria-label="Get started"
-      className="border-t border-[var(--md-sys-color-outline-variant)] pt-10"
-    >
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="text-2xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-      >
-        {title}
-      </h2>
-      <p className="mt-3 max-w-xl text-base leading-7 text-[var(--md-sys-color-on-surface-variant)]">
-        {body}
-      </p>
-      <div className="m3-btn-pair mt-6 flex flex-col gap-3 sm:flex-row">
-        <Link href={primary.href} className="m3-btn m3-btn-filled m3-btn--hero w-full sm:w-auto">
+    <section aria-label="Get started" className={`cal-cta-panel ${boxed ? "!mt-0" : ""}`}>
+      <h2 className="cal-read-h2">{title}</h2>
+      <p className="cal-lead">{body}</p>
+      <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+        <Link href={primary.href} className="site-btn site-btn-primary w-full sm:w-auto">
           {primary.label}
         </Link>
-        <Link
-          href={secondary.href}
-          className="m3-btn m3-btn-outlined m3-btn--hero w-full sm:w-auto"
-        >
+        <Link href={secondary.href} className="site-btn site-btn-outline w-full sm:w-auto">
           {secondary.label}
         </Link>
       </div>
@@ -619,12 +501,12 @@ export function HeroActions({
 }) {
   return (
     <>
-      <Link href={primary.href} className="m3-btn m3-btn-filled m3-btn--hero w-full sm:w-auto">
+      <Link href={primary.href} className="site-btn site-btn-primary w-full sm:w-auto">
         {primary.label}
       </Link>
       <Link
         href={secondary.href}
-        className="m3-btn m3-btn-outlined m3-btn--hero w-full sm:w-auto"
+        className="site-btn site-btn-outline w-full sm:w-auto"
       >
         {secondary.label}
       </Link>

@@ -1,27 +1,37 @@
 import Link from "next/link";
 import Compose from "../compose";
+import { IntegrationMark, integrationName } from "../integrations/integration-logo";
+import LogoMark from "../logo-mark";
+import { CalPageHero } from "../marketing-shell";
 import {
   CtaBlock,
   familyCrumbs,
   FaqBlock,
+  MarkdownTwinLink,
   pageJsonLd,
   RelatedLinks,
   SectionProse,
-  SeoBanner,
-  SeoDocLayout,
   SeoPageChrome,
   SetupSteps,
 } from "./shared";
-import { cmsHeroBanner, type SeoContentPage } from "./types";
+import { type SeoContentPage } from "./types";
 
+const ENDPOINTS = [
+  { label: "MCP", value: "https://omentir.com/api/agent/v1/mcp" },
+  { label: "REST", value: "https://omentir.com/api/agent/v1/*" },
+];
+
+/** Integration page laid out like calendly.com/integration/*: "Omentir + X"
+ *  hero with both marks, then a sticky facts card beside the story. */
 export default function IntegrationPageView({ page }: { page: SeoContentPage }) {
   const compose = page.slug === "claude-code";
-  const banner = cmsHeroBanner(page);
-  const bannerNode = banner ? (
-    <div className="mt-8">
-      <SeoBanner src={banner.src} alt={banner.alt} width={banner.width} height={banner.height} />
-    </div>
-  ) : null;
+  const name = integrationName(page.slug);
+  const primary = page.primaryCta ?? { label: "Start with Omentir", href: "/signup" };
+  const facts = [
+    page.connect?.surface ? { label: "Connects through", value: page.connect.surface } : null,
+    page.connect?.auth ? { label: "Sign-in", value: page.connect.auth } : null,
+    page.connect?.bestFor ? { label: "Best for", value: page.connect.bestFor } : null,
+  ].filter((fact): fact is { label: string; value: string } => fact !== null);
 
   return (
     <SeoPageChrome
@@ -29,54 +39,78 @@ export default function IntegrationPageView({ page }: { page: SeoContentPage }) 
       jsonLd={pageJsonLd("integrations", page)}
     >
       <Compose enabled={compose}>
-        <SeoDocLayout
-          as="article"
+        <CalPageHero
           crumbs={familyCrumbs("integrations", page.slug)}
+          leading={
+            <div className="cal-pair mb-6" aria-hidden="true">
+              <span className="cal-pair-tile">
+                <LogoMark className="h-7 w-7" />
+              </span>
+              <span className="cal-pair-plus">+</span>
+              <span className="cal-pair-tile">
+                <IntegrationMark slug={page.slug} />
+              </span>
+            </div>
+          }
           title={page.title}
-          afterTitle={bannerNode}
-          path={`/integrations/${page.slug}`}
+          description={page.summary}
         >
-          <section>
-            <h2
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-            >
-              Endpoints
-            </h2>
-            <dl className="mt-5 space-y-4 font-mono text-sm leading-6">
+          <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+            <Link href={primary.href} className="site-btn site-btn-primary w-full sm:w-auto">
+              {primary.label}
+            </Link>
+            {page.setupSteps ? (
+              <a href="#setup-steps" className="site-btn site-btn-outline w-full sm:w-auto">
+                See setup
+              </a>
+            ) : null}
+          </div>
+        </CalPageHero>
+
+        <div className="cal-side-layout">
+          <aside className="cal-facts">
+            <p className="cal-facts-title">
+              <span className="cal-facts-mark">
+                <IntegrationMark slug={page.slug} />
+              </span>
+              {name}
+            </p>
+            <dl>
+              {facts.map((fact) => (
+                <div key={fact.label}>
+                  <dt>{fact.label}</dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              ))}
               <div>
-                <dt className="text-[var(--md-sys-color-on-surface-variant)]">MCP</dt>
-                <dd className="mt-1 break-all">https://omentir.com/api/agent/v1/mcp</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--md-sys-color-on-surface-variant)]">REST</dt>
-                <dd className="mt-1 break-all">https://omentir.com/api/agent/v1/*</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--md-sys-color-on-surface-variant)]">Guide</dt>
-                <dd className="mt-1">
-                  <Link
-                    href="/agents.md"
-                    className="text-[var(--md-sys-color-primary)] underline-offset-2 hover:underline"
-                  >
-                    /agents.md
-                  </Link>
-                </dd>
+                <dt>Endpoints</dt>
+                {ENDPOINTS.map((endpoint) => (
+                  <dd key={endpoint.label} className="cal-facts-code">
+                    <span>{endpoint.label}</span>
+                    {endpoint.value}
+                  </dd>
+                ))}
               </div>
             </dl>
-          </section>
+            <Link href="/agents.md" className="cal-underline-link mt-5">
+              Agent guide <span aria-hidden="true">&rarr;</span>
+            </Link>
+          </aside>
 
-          {page.setupSteps ? <SetupSteps steps={page.setupSteps} /> : null}
-          <SectionProse page={page} />
-          {page.relatedLinks ? <RelatedLinks links={page.relatedLinks} /> : null}
-          <FaqBlock page={page} branded />
-          <CtaBlock
-            page={page}
-            boxed
-            title="Connect your operator to a real sales workspace"
-            body="Omentir holds the LinkedIn connection and safety limits. Your AI configures agents and inspects results."
-          />
-        </SeoDocLayout>
+          <article className="min-w-0 space-y-14 md:space-y-16">
+            {page.setupSteps ? <SetupSteps steps={page.setupSteps} /> : null}
+            <SectionProse page={page} />
+            {page.relatedLinks ? <RelatedLinks links={page.relatedLinks} /> : null}
+            <FaqBlock page={page} branded />
+            <CtaBlock
+              page={page}
+              boxed
+              title="Connect your operator to a real sales workspace"
+              body="Omentir holds the LinkedIn connection and safety limits. Your AI configures agents and inspects results."
+            />
+            <MarkdownTwinLink path={`/integrations/${page.slug}`} title={page.title} />
+          </article>
+        </div>
       </Compose>
     </SeoPageChrome>
   );

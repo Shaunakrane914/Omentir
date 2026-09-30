@@ -11,10 +11,7 @@ export default function AlternativesDirectory({
   return (
     <div className="space-y-14">
       <section>
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
+        <h2 className="cal-read-h2">
           By category
         </h2>
         <SeoTitleList
@@ -26,10 +23,7 @@ export default function AlternativesDirectory({
       </section>
 
       <section aria-label="Pick by job">
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
+        <h2 className="cal-read-h2">
           Pick by job
         </h2>
         <ul className="divide-y divide-[var(--md-sys-color-outline-variant)] border-b border-[var(--md-sys-color-outline-variant)]">

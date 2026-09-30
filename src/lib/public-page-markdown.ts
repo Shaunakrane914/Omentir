@@ -332,13 +332,12 @@ function familyIndexMarkdown(
 }
 
 function homeMarkdown() {
-  // Home hero is site-surface copy + CTAs, then a framed product preview
-  // in primary width. Headline comes from hero-copy.tsx. Capability slides
-  // live in home-capability-slides.tsx.
+  // Headline lives in page.tsx; the product tabs under the hero live in
+  // home-product-tabs.tsx.
   const source = readAppFile("page.tsx");
-  const hero = readAppFile("hero-copy.tsx");
-  const capabilities = extractTsxScope(readAppFile("home-capability-slides.tsx"));
-  const slideRows = objectRows(capabilities.get("homeSlides")).map((slide) => {
+  const hero = source;
+  const capabilities = extractTsxScope(readAppFile("home-product-tabs.tsx"));
+  const slideRows = objectRows(capabilities.get("TABS")).map((slide) => {
     const body = objectString(slide.body);
     return body
       ? `- **${objectString(slide.title)}**: ${body}`

@@ -14,7 +14,7 @@ export default function SsoCallbackLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthShell footer={<AuthLegalFooter />}>
+    <AuthShell marketing footer={<AuthLegalFooter />}>
       {children}
     </AuthShell>
   );

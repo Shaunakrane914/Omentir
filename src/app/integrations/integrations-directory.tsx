@@ -7,8 +7,7 @@ import {
   MarketingTr,
 } from "../marketing-table";
 import type { SeoContentPage } from "../seo-content/types";
-import { SeoTitleList } from "../seo-content/shared";
-import IntegrationLogo, { integrationName } from "./integration-logo";
+import IntegrationLogo, { IntegrationMark, integrationName } from "./integration-logo";
 
 export default function IntegrationsDirectory({
   pages,
@@ -17,26 +16,30 @@ export default function IntegrationsDirectory({
 }) {
   return (
     <div className="space-y-14">
-      <section aria-label="Integration list">
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
-          Integrations
-        </h2>
-        <SeoTitleList
-          items={pages.map((page) => ({
-            href: `/integrations/${page.slug}`,
-            label: page.title,
-          }))}
-        />
-      </section>
+      {/* Logo cards, like calendly.com/integrations: mark on a tile, name,
+          summary, and how it connects. */}
+      <ul aria-label="Integration list" className="cal-int-grid">
+        {pages.map((page) => (
+          <li key={page.slug}>
+            <Link href={`/integrations/${page.slug}`} className="cal-int-card">
+              <span className="cal-int-logo">
+                <IntegrationMark slug={page.slug} />
+              </span>
+              <strong>{integrationName(page.slug)}</strong>
+              <span className="cal-int-summary">{page.summary}</span>
+              {page.connect ? (
+                <span className="cal-int-meta">
+                  <span className="cal-post-tag">{page.connect.surface}</span>
+                  {page.connect.auth}
+                </span>
+              ) : null}
+            </Link>
+          </li>
+        ))}
+      </ul>
 
       <section aria-label="Connect matrix">
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
+        <h2 className="cal-read-h2">
           Connect paths
         </h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--md-sys-color-on-surface-variant)] sm:text-base">

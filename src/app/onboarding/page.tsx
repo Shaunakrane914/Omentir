@@ -4,11 +4,10 @@ import { getProductProfile } from "@/lib/server/data";
 import { resolveActiveWorkspace } from "@/lib/server/active-workspace";
 import { hasActiveSubscription } from "@/lib/server/subscription";
 import { isLocalMode } from "@/lib/runtime-mode";
-import AuthShell from "../auth-shell";
 import { AuthHeading } from "../auth-ui";
 import { createPageMetadata } from "../seo";
 import WebsiteFetchPanel from "../website-fetch-panel";
-import OnboardingProgress from "./onboarding-progress";
+import OnboardingShell from "./onboarding-shell";
 import StepLeadPreview from "./step-lead-preview";
 import StepQuestions from "./step-questions";
 import StepSubscriptionConfirmed from "./step-subscription-confirmed";
@@ -89,34 +88,38 @@ export default async function OnboardingPage({
     : `step-${step}`;
 
   return (
-    <AuthShell
-      top={<OnboardingProgress current={progressStep} selfHosted={selfHosted} />}
+    <OnboardingShell
+      step={progressStep}
+      selfHosted={selfHosted}
+      contentKey={contentKey}
     >
-      <div key={contentKey} className="onboarding-step-enter w-full">
-        {showSubscriptionConfirmed ? (
-          <div className="mx-auto w-full max-w-[360px]">
-            <StepSubscriptionConfirmed />
-          </div>
-        ) : (
-          <>
-            {step === 1 ? (
-              <div className="mx-auto w-full max-w-[360px]">
-                <AuthHeading
-                  title="Fetch your website"
-                  subtitle="Omentir will read your public pages, summarize the product, and prepare the buyer profile before proceeding."
-                />
+      {showSubscriptionConfirmed ? (
+        <div className="cal-onboard-panel">
+          <StepSubscriptionConfirmed />
+        </div>
+      ) : (
+        <>
+          {step === 1 ? (
+            <>
+              <AuthHeading
+                title="Fetch your website"
+                subtitle="Omentir will read your public pages, summarize the product, and prepare the buyer profile before proceeding."
+              />
+              <div className="cal-onboard-panel">
                 <WebsiteFetchPanel website={website} isSignedIn />
               </div>
-            ) : null}
+            </>
+          ) : null}
 
-            {step === 2 && leadPreviewInput ? (
+          {step === 2 && leadPreviewInput ? (
+            <div className="cal-onboard-panel">
               <StepLeadPreview input={leadPreviewInput} selfHosted={selfHosted} />
-            ) : null}
-            {step === 3 ? <StepQuestions /> : null}
-            {step === 4 ? <StepUpgrade status={billingStatus} /> : null}
-          </>
-        )}
-      </div>
-    </AuthShell>
+            </div>
+          ) : null}
+          {step === 3 ? <StepQuestions /> : null}
+          {step === 4 ? <StepUpgrade status={billingStatus} /> : null}
+        </>
+      )}
+    </OnboardingShell>
   );
 }

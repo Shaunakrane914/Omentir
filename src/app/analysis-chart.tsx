@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type {
   ActivityDay,
   CampaignEnrollmentPreview,
@@ -27,15 +27,23 @@ type AnalysisChartProps = {
   maxDays?: number;
   startDateKey?: string;
   endDateKey?: string;
+  /** Card title block; the metric picker sits on its right. */
+  heading?: ReactNode;
 };
 
-/** Categorical slots 1-4, validated for the dark chart well (CVD + normal-vision separation). */
-const series = [
-  { key: "found", label: "Leads found", color: "#3987e5" },
-  { key: "contacted", label: "People contacted", color: "#d95926" },
-  { key: "replies", label: "Replies received", color: "#199e70" },
-  { key: "meetingsBooked", label: "Meetings booked", color: "#c98500" },
+/* One metric at a time (Calendly analytics style): the four counts live on
+   very different scales (hundreds of leads, a handful of replies), so one
+   stacked bar hid replies and meetings as slivers. Each metric gets its own
+   scale; the bars wear one accent (--analysis-chart-accent, validated for
+   the light and dark panels). */
+const metrics = [
+  { key: "found", label: "Leads found", short: "Leads", unit: "leads found" },
+  { key: "contacted", label: "People contacted", short: "Contacted", unit: "people contacted" },
+  { key: "replies", label: "Replies received", short: "Replies", unit: "replies received" },
+  { key: "meetingsBooked", label: "Meetings booked", short: "Meetings", unit: "meetings booked" },
 ] as const;
+
+type MetricKey = (typeof metrics)[number]["key"];
 
 /** Pixel layout; the SVG is drawn at its real width so text never scales. */
 const chart = {
@@ -44,10 +52,11 @@ const chart = {
   right: 8,
   top: 12,
   bottom: 28,
-  maxBar: 24,
-  gap: 2,
-  radius: 4,
-  minSegment: 2,
+  maxBar: 28,
+  /* Bars fill 60% of their day slot; the rest is air between days. */
+  barRatio: 0.6,
+  radius: 3,
+  minBar: 2,
 };
 
 function buildChartData({
@@ -96,6 +105,7 @@ export default function AnalysisChart(props: AnalysisChartProps) {
   const chartData = useMemo(() => buildChartData(props), [props]);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [metricKey, setMetricKey] = useState<MetricKey>("found");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
@@ -109,10 +119,14 @@ export default function AnalysisChart(props: AnalysisChartProps) {
     return () => observer.disconnect();
   }, [chartData.length]);
 
-  const maxObserved = Math.max(
-    0,
-    ...chartData.map((item) => series.reduce((sum, s) => sum + item[s.key], 0)),
-  );
+  const totals = useMemo(() => {
+    const sums = { found: 0, contacted: 0, replies: 0, meetingsBooked: 0 } as Record<MetricKey, number>;
+    for (const point of chartData) for (const m of metrics) sums[m.key] += point[m.key];
+    return sums;
+  }, [chartData]);
+
+  const metric = metrics.find((m) => m.key === metricKey) ?? metrics[0];
+  const maxObserved = Math.max(0, ...chartData.map((item) => item[metric.key]));
   const scaleMax = getScaleMax(maxObserved);
   const hoverPoint =
     hoverIndex != null ? chartData[Math.min(hoverIndex, chartData.length - 1)] : null;
@@ -120,30 +134,13 @@ export default function AnalysisChart(props: AnalysisChartProps) {
   const baseline = chart.height - chart.bottom;
   const plotWidth = Math.max(0, width - chart.left - chart.right);
   const slot = chartData.length ? plotWidth / chartData.length : 0;
-  const barWidth = Math.max(1, Math.min(chart.maxBar, slot - chart.gap));
+  const barWidth = Math.max(1, Math.min(chart.maxBar, slot * chart.barRatio));
   const pxPerUnit = (baseline - chart.top) / scaleMax;
   /* Label every Nth day so labels keep ~72px apart; the latest day always shows. */
   const labelEvery = Math.max(1, Math.ceil(72 / Math.max(slot, 1)));
 
   function getY(value: number) {
     return baseline - value * pxPerUnit;
-  }
-
-  /* Stack from the baseline with a 2px surface gap between segments; tiny
-     non-zero counts keep a 2px sliver so a single reply is still visible. */
-  function buildSegments(item: ChartPoint) {
-    const segments: Array<{ key: string; color: string; y: number; height: number }> = [];
-    let cursor = baseline;
-    for (const s of series) {
-      const value = item[s.key];
-      if (value <= 0) continue;
-      if (segments.length) cursor -= chart.gap;
-      const height = Math.max(chart.minSegment, value * pxPerUnit);
-      const y = Math.max(chart.top, cursor - height);
-      segments.push({ key: s.key, color: s.color, y, height: cursor - y });
-      cursor = y;
-    }
-    return segments;
   }
 
   /* Hard zero baseline + 4 interval grid (horizontal only). */
@@ -154,40 +151,64 @@ export default function AnalysisChart(props: AnalysisChartProps) {
     const rect = wrapRef.current?.getBoundingClientRect();
     if (!rect) return;
     setTooltipPos({
-      x: Math.min(Math.max(8, clientX - rect.left + 12), rect.width - 160),
+      x: Math.min(Math.max(8, clientX - rect.left + 12), rect.width - 200),
       y: clientY - rect.top,
     });
   }
 
-  const legend = (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      {series.map((item) => (
-        <div
-          key={item.key}
-          className="flex items-center gap-1.5 text-[11px] font-normal text-[var(--md-sys-color-text-medium)]"
-        >
-          <span
-            className="h-2 w-2 shrink-0 rounded-[2px]"
-            style={{ backgroundColor: item.color }}
-            aria-hidden
-          />
-          {item.label}
+  if (!chartData.length) {
+    return (
+      <div className="analysis-chart">
+        {props.heading}
+        <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+          <span className="material-symbols-outlined text-3xl text-[var(--md-sys-color-text-medium)]">monitoring</span>
+          <p className="mt-3 text-sm font-semibold text-[var(--md-sys-color-text-high)]">
+            No activity yet
+          </p>
+          <p className="mt-1 max-w-sm text-xs font-normal leading-5 text-[var(--md-sys-color-text-medium)]">
+            Leads found, people contacted, replies received, and meetings booked
+            show up here once outreach starts.
+          </p>
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  }
 
   return (
     <div className="analysis-chart">
-      {chartData.length ? (
-        <div ref={wrapRef} className="relative min-w-0" style={{ height: chart.height }}>
-          {width > 0 ? (
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">{props.heading}</div>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="flex items-baseline gap-2 text-[13px] text-[var(--md-sys-color-text-medium)]">
+            {metric.label}
+            <span className="analysis-chart__total">{totals[metric.key].toLocaleString()}</span>
+          </p>
+          <div className="app-seg analysis-chart__seg" role="group" aria-label="Metric">
+            {metrics.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                aria-pressed={m.key === metric.key}
+                onClick={() => {
+                  setMetricKey(m.key);
+                  setHoverIndex(null);
+                }}
+              >
+                {m.short}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div ref={wrapRef} className="relative mt-4 min-w-0" style={{ height: chart.height }}>
+        {width > 0 ? (
           <svg
             width={width}
             height={chart.height}
             viewBox={`0 0 ${width} ${chart.height}`}
             role="img"
-            aria-label="Leads found, people contacted, replies received, and meetings booked per day"
+            aria-label={`${metric.label} per day`}
             className="block"
             onPointerLeave={() => setHoverIndex(null)}
           >
@@ -204,13 +225,12 @@ export default function AnalysisChart(props: AnalysisChartProps) {
                     strokeWidth="1"
                   />
                   <text
-                    x={chart.left - 8}
+                    x={0}
                     y={y + 4}
                     className="analysis-chart__label"
                     fontSize="11"
                     fontWeight="400"
-                    textAnchor="end"
-                    style={{ fontFamily: "var(--font-roboto), sans-serif" }}
+                    textAnchor="start"
                   >
                     {Math.round(value)}
                   </text>
@@ -218,45 +238,30 @@ export default function AnalysisChart(props: AnalysisChartProps) {
               );
             })}
 
+            <g key={metric.key}>
             {chartData.map((item, index) => {
               const slotX = chart.left + index * slot;
               const center = slotX + slot / 2;
               const barX = center - barWidth / 2;
-              const segments = buildSegments(item);
+              const value = item[metric.key];
+              /* Tiny non-zero counts keep a 2px bar so one reply still shows. */
+              const barHeight = value > 0 ? Math.max(chart.minBar, value * pxPerUnit) : 0;
               const fromEnd = chartData.length - 1 - index;
+              const dimmed = hoverIndex != null && hoverIndex !== index;
               const showLabel = fromEnd % labelEvery === 0;
               const anchor =
                 center - chart.left < 28 ? "start" : width - chart.right - center < 28 ? "end" : "middle";
 
               return (
                 <g key={item.dateKey}>
-                  {hoverIndex === index ? (
-                    <rect
-                      x={slotX}
-                      y={chart.top}
-                      width={slot}
-                      height={baseline - chart.top}
-                      className="analysis-chart__hover-band"
+                  {barHeight > 0 ? (
+                    <path
+                      d={roundedTopBar(barX, baseline - barHeight, barWidth, barHeight)}
+                      className="analysis-chart__bar"
+                      data-dimmed={dimmed || undefined}
+                      style={{ animationDelay: `${Math.round((index / chartData.length) * 400)}ms` }}
                     />
                   ) : null}
-                  {segments.map((segment, segmentIndex) =>
-                    segmentIndex === segments.length - 1 ? (
-                      <path
-                        key={segment.key}
-                        d={roundedTopBar(barX, segment.y, barWidth, segment.height)}
-                        fill={segment.color}
-                      />
-                    ) : (
-                      <rect
-                        key={segment.key}
-                        x={barX}
-                        y={segment.y}
-                        width={barWidth}
-                        height={segment.height}
-                        fill={segment.color}
-                      />
-                    ),
-                  )}
                   {showLabel ? (
                     <text
                       x={anchor === "start" ? slotX : anchor === "end" ? slotX + slot : center}
@@ -265,7 +270,6 @@ export default function AnalysisChart(props: AnalysisChartProps) {
                       fontSize="11"
                       fontWeight="400"
                       textAnchor={anchor}
-                      style={{ fontFamily: "var(--font-roboto), sans-serif" }}
                     >
                       {item.date}
                     </text>
@@ -283,58 +287,65 @@ export default function AnalysisChart(props: AnalysisChartProps) {
                 </g>
               );
             })}
+            </g>
           </svg>
-          ) : null}
+        ) : null}
 
-          {hoverPoint && hoverIndex != null ? (
-            <div
-              className="analysis-chart__tooltip pointer-events-none absolute z-10 min-w-[148px] rounded-lg px-3 py-2.5"
-              style={{
-                left: tooltipPos.x,
-                top: Math.max(8, tooltipPos.y - 12),
-                transform: "translateY(-100%)",
-              }}
-              role="status"
-            >
-              <div className="text-[12px] font-bold tracking-tight text-[var(--md-sys-color-text-high)]">
-                {hoverPoint.date}
-              </div>
-              <div className="mt-2 grid gap-1.5">
-                {series.map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center justify-between gap-4 text-[12px] font-normal"
-                  >
-                    <span className="flex items-center gap-1.5 text-[var(--md-sys-color-text-medium)]">
-                      <span
-                        className="h-2 w-2 shrink-0 rounded-[2px]"
-                        style={{ backgroundColor: item.color }}
-                        aria-hidden
-                      />
-                      {item.label}
-                    </span>
-                    <span className="font-medium tabular-nums text-[var(--md-sys-color-text-high)]">
-                      {hoverPoint[item.key]}
-                    </span>
-                  </div>
-                ))}
-              </div>
+        {totals[metric.key] === 0 ? (
+          <p className="pointer-events-none absolute inset-x-0 top-[40%] text-center text-sm text-[var(--md-sys-color-text-medium)]">
+            No {metric.unit} in this range
+          </p>
+        ) : null}
+
+        {hoverPoint && hoverIndex != null ? (
+          <div
+            className="analysis-chart__tooltip pointer-events-none absolute z-10 min-w-[190px] rounded-lg px-3 py-2.5"
+            style={{
+              left: tooltipPos.x,
+              top: Math.max(8, tooltipPos.y - 12),
+              transform: "translateY(-100%)",
+            }}
+            role="status"
+          >
+            <div className="text-[12px] text-[var(--md-sys-color-text-medium)]">
+              {hoverPoint.date}
+              {hoverPoint.dateKey === props.endDateKey ? ", so far" : ""}
             </div>
-          ) : null}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-          <span className="material-symbols-outlined text-3xl text-[var(--md-sys-color-text-medium)]">monitoring</span>
-          <p className="mt-3 text-sm font-semibold text-[var(--md-sys-color-text-high)]">
-            No activity yet
-          </p>
-          <p className="mt-1 max-w-sm text-xs font-normal leading-5 text-[var(--md-sys-color-text-medium)]">
-            Leads found, people contacted, replies received, and meetings booked
-            show up here once outreach starts.
-          </p>
-        </div>
-      )}
-      <div className="mt-4">{legend}</div>
+            <div className="mt-1.5 flex items-center gap-2 text-[13px] text-[var(--md-sys-color-text-high)]">
+              <span className="analysis-chart__swatch" aria-hidden="true" />
+              <span className="text-[var(--md-sys-color-text-medium)]">{metric.label}</span>
+              <span className="ml-auto pl-3 font-semibold tabular-nums">
+                {hoverPoint[metric.key].toLocaleString()}
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Table view of the same numbers for screen readers. */}
+      <table className="sr-only">
+        <caption>Activity per day</caption>
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            {metrics.map((m) => (
+              <th key={m.key} scope="col">
+                {m.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {chartData.map((item) => (
+            <tr key={item.dateKey}>
+              <th scope="row">{item.date}</th>
+              {metrics.map((m) => (
+                <td key={m.key}>{item[m.key]}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

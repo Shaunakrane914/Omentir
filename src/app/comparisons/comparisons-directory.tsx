@@ -8,10 +8,7 @@ export default function ComparisonsDirectory({
 }) {
   return (
     <section aria-label="Comparison list">
-      <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-      >
+      <h2 className="cal-read-h2">
         Comparisons
       </h2>
       <SeoTitleList

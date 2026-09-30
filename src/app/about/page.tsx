@@ -60,8 +60,8 @@ export default function AboutPage() {
           </div>
           <div>
             <h2
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
             >
               heyo! it&apos;s Vansh
             </h2>
@@ -97,7 +97,7 @@ export default function AboutPage() {
           </p>
           <p>
             I turned that internal tool into a product called{" "}
-            <span style={{ fontFamily: "var(--font-varta)" }} className="select-none font-bold">
+            <span style={{ fontFamily: "var(--font-cal-display)" }} className="select-none font-medium">
               Omentir
             </span>
             {". In Quenya, the name means "}

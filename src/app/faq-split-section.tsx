@@ -1,5 +1,7 @@
 import FaqAccordion, { type FaqItem } from "./faq-accordion";
 
+/** FAQ block for marketing pages: a centered serif heading and the question
+ *  list in a cream rounded panel. */
 export default function FaqSplitSection({
   items,
   className,
@@ -14,10 +16,10 @@ export default function FaqSplitSection({
       id="faq"
       className={`${widthClass} min-w-0 scroll-mt-24 ${className ?? ""}`}
     >
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-start lg:gap-24 xl:gap-32">
-        <h2 className="faq-section-heading">Frequently asked questions</h2>
-        <div className="border-y border-[var(--md-sys-color-outline-variant)]">
-          <FaqAccordion items={items} chevron />
+      <div className="cal-faq-panel">
+        <h2 className="cal-faq-heading">Frequently asked questions</h2>
+        <div className="cal-faq-list">
+          <FaqAccordion items={items} />
         </div>
       </div>
     </section>

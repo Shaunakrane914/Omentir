@@ -142,7 +142,7 @@ export function AskAiSection() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Ask ${bot.name} about Omentir`}
-              className="m3-btn m3-btn-outlined h-12 w-full gap-1.5 bg-[var(--md-sys-color-surface)] px-3 text-sm font-medium md:h-14 md:text-base"
+              className="site-btn site-btn-outline w-full gap-1.5 !px-3"
             >
               Ask
               <span className="flex items-center gap-1">
@@ -158,17 +158,17 @@ export function AskAiSection() {
 }
 
 /**
- * Desktop-nav "Ask AI" item. Pure CSS hover dropdown (no client JS): the menu
- * shows on hover/focus-within, so it appears instantly and SSRs like the rest
- * of the marketing header. pt-2 bridges the pointer gap between trigger & menu.
+ * Desktop-nav "Ask AI" item, built on the Features menu's panel (.nav-menu).
+ * Pure CSS hover dropdown (no client JS): it shows on hover/focus-within, so
+ * it appears instantly and SSRs like the rest of the marketing header.
  */
 export function AskAiMenu() {
   return (
-    <div className="group relative">
+    <div className="nav-menu group relative">
       <button
         type="button"
         aria-haspopup="true"
-        className="m3-state-layer flex cursor-pointer items-center gap-1 rounded-md px-3 py-2 transition-colors hover:text-[var(--md-sys-color-on-surface)]"
+        className="nav-menu-trigger m3-state-layer flex cursor-pointer items-center gap-1 rounded-md px-3 py-2 transition-colors hover:text-[var(--md-sys-color-on-surface)]"
       >
         Ask AI
         <svg
@@ -181,33 +181,45 @@ export function AskAiMenu() {
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
-          className="transition-transform duration-150 group-hover:rotate-180 group-focus-within:rotate-180"
+          className="transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180"
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
-      <div className="invisible pointer-events-none absolute right-0 top-full z-[120] pt-2 opacity-0 transition-[opacity,visibility,transform] duration-150 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100">
-        <ul
-          className="m3-menu m3-menu--compact m3-menu--origin-top-right min-w-[11rem] scale-95 bg-[var(--md-sys-color-surface-container-high)] transition-transform duration-150 group-focus-within:scale-100 group-hover:scale-100"
-          style={{ maxHeight: "none" }}
-        >
-          {ASK_AI_LINKS.map((bot) => (
-            <li key={bot.name}>
-              <a
-                href={bot.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Ask ${bot.name} about Omentir`}
-                className="m3-menu-item whitespace-nowrap"
-              >
-                <span className="flex items-center gap-2">
-                  <AskAiIcon bot={bot} gradientId="askai-gemini-desktop" />
-                  {bot.name}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
+      {/* Bridge under the trigger so the pointer can cross the gap. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-full h-3 group-hover:pointer-events-auto group-focus-within:pointer-events-auto"
+      />
+      <div className="invisible pointer-events-none absolute right-0 top-full z-[120] w-[min(26rem,calc(100vw-2rem))] lg:right-auto lg:left-1/2 lg:-translate-x-1/2 pt-3 opacity-0 transition-[opacity,visibility] duration-150 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100">
+        <div className="nav-menu-panel overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-high)] shadow-[var(--md-sys-elevation-3)]">
+          <div className="p-4">
+            <p className="nav-menu-title px-2">Ask an AI about Omentir</p>
+            <p className="nav-menu-note mt-1 px-2">
+              Opens a new chat with the question already typed in.
+            </p>
+            <ul className="mt-3 grid grid-cols-2 gap-0.5">
+              {ASK_AI_LINKS.map((bot) => (
+                <li key={bot.name}>
+                  <a
+                    href={bot.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Ask ${bot.name} about Omentir (opens in a new tab)`}
+                    className="nav-menu-item ask-ai-item"
+                  >
+                    {/* Fixed tile so every name lines up, whatever the mark's
+                        own size (Kimi is drawn smaller). */}
+                    <span className="ask-ai-tile">
+                      <AskAiIcon bot={bot} size={20} gradientId="askai-gemini-desktop" />
+                    </span>
+                    <span className="nav-menu-title min-w-0 flex-1 truncate">{bot.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

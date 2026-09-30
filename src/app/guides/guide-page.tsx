@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import FaqSplitSection from "../faq-split-section";
@@ -6,6 +5,7 @@ import { PromptCopyBox } from "../grok-bot-setup-block";
 import JsonLd from "../json-ld";
 import MarketingClosingCta from "../marketing-closing-cta";
 import {
+  CalPageHero,
   MarketingFooter,
   MarketingHeader,
 } from "../marketing-shell";
@@ -17,7 +17,6 @@ import {
 } from "../seo";
 import { LandingSection, RelatedCards } from "./landing-kit";
 import { type GuidePage } from "./types";
-import { isSanityCdnUrl } from "@/sanity/lib/image";
 
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
@@ -99,14 +98,6 @@ function DefaultGuideBody({ page }: { page: GuidePage }) {
 export default function GuidePageView({ page }: { page: GuidePage }) {
   const path = `/${page.slug}`;
   const pageUrl = `${siteUrl}${path}`;
-  const banner = page.ogImage
-    ? {
-        src: page.ogImage.url,
-        alt: page.ogImage.alt,
-        width: page.ogImage.width,
-        height: page.ogImage.height,
-      }
-    : null;
   const showFaq = page.faqItems.length > 0;
   const jsonLd = [
     createWebPageJsonLd({
@@ -127,37 +118,14 @@ export default function GuidePageView({ page }: { page: GuidePage }) {
       <JsonLd id={`guide-${page.slug}-jsonld`} data={jsonLd} />
       <main className="site-theme min-h-screen overflow-x-hidden">
         <MarketingHeader transparentAtTop />
-        <div className="relative">
-          <section className="omentir-moderate-width relative z-10 min-w-0 pb-12 pt-36 text-center md:pb-16 md:pt-48">
-            <h1
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="mx-auto max-w-3xl text-3xl font-semibold leading-[1.15] tracking-tight text-[var(--md-sys-color-on-surface)] md:text-5xl"
-            >
-              {page.title}
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[var(--md-sys-color-on-surface-variant)] md:text-lg">
-              {page.description}
-            </p>
-            <div className="m3-btn-pair mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/signup" className="m3-btn m3-btn-filled m3-btn--hero w-full sm:w-auto">
-                Get started
-              </Link>
-            </div>
-            {banner ? (
-              <figure className="relative mt-10 aspect-[3/2] overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] md:mt-12">
-                <Image
-                  src={banner.src}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 960px, calc(100vw - 2rem)"
-                  className="object-cover object-center"
-                  priority
-                  unoptimized={isSanityCdnUrl(banner.src)}
-                />
-              </figure>
-            ) : null}
-          </section>
-        </div>
+        <CalPageHero
+          title={page.title}
+          description={page.description}
+        >
+          <Link href="/signup" className="site-btn site-btn-primary mt-8">
+            Get started
+          </Link>
+        </CalPageHero>
 
         <DefaultGuideBody page={page} />
 

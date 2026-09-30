@@ -1,3 +1,5 @@
+import type { FeatureNavIcon } from "../feature-nav";
+import type { SquircleTone } from "../squircle-icon";
 export type HelpCluster =
   | "limits"
   | "profile"
@@ -35,6 +37,18 @@ export type HelpPageDraft = {
 
 export type HelpPage = Omit<HelpPageDraft, "relatedSlugs"> & {
   related: HelpRelated[];
+};
+
+/** Icon and tone per topic: help index tiles and article heroes. */
+export const CLUSTER_ICON: Record<HelpCluster, [FeatureNavIcon, SquircleTone]> = {
+  limits: ["shield", "blue"],
+  profile: ["people", "lavender"],
+  requests: ["network", "lime"],
+  messages: ["message", "mint"],
+  inmail: ["inbox", "orange"],
+  targeting: ["target", "blue"],
+  email: ["send", "lavender"],
+  rules: ["product", "lime"],
 };
 
 export const HELP_CLUSTER_LABELS: Record<HelpCluster, string> = {

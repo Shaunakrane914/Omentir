@@ -6,19 +6,12 @@ import {
   pageJsonLd,
   RelatedLinks,
   SectionProse,
-  SeoBanner,
   SeoDocLayout,
   SeoPageChrome,
 } from "./shared";
-import { cmsHeroBanner, type SeoContentPage } from "./types";
+import { type SeoContentPage } from "./types";
 
 export default function AlternativePageView({ page }: { page: SeoContentPage }) {
-  const banner = cmsHeroBanner(page);
-  const bannerNode = banner ? (
-    <div className="mt-8">
-      <SeoBanner src={banner.src} alt={banner.alt} width={banner.width} height={banner.height} />
-    </div>
-  ) : null;
 
   return (
     <SeoPageChrome
@@ -29,17 +22,13 @@ export default function AlternativePageView({ page }: { page: SeoContentPage }) 
         as="article"
         crumbs={familyCrumbs("alternatives", page.slug)}
         title={page.title}
-        afterTitle={bannerNode}
         path={`/alternatives/${page.slug}`}
         width={page.slug === "grok-bot" ? "primary" : "secondary"}
       >
         <VerdictBanner page={page} />
         {page.roundupItems ? (
           <section id="shortlist">
-            <h2
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-            >
+            <h2 className="cal-read-h2">
               Shortlist
             </h2>
             <div className="mt-6">

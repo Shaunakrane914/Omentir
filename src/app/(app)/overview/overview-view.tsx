@@ -285,6 +285,17 @@ export default function OverviewView({
       .slice(0, 5);
   }, [loadedLinkedInThreads, loadedLeads]);
 
+  const activityHeading = (
+    <div>
+      <h2 className="section-title text-[var(--md-sys-color-on-surface)]">
+        Your activity
+      </h2>
+      <p className="mt-1 text-sm font-normal text-[var(--md-sys-color-on-surface-variant)]">
+        Leads, outreach, and replies for this range.
+      </p>
+    </div>
+  );
+
   return (
     <div className="relative flex h-full min-h-0 flex-col">
       <div className="app-x min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-6">
@@ -370,40 +381,29 @@ export default function OverviewView({
         </div>
 
         <div className="m3-card m3-card-outlined mt-5 min-w-0 px-5 py-4 sm:px-6 sm:py-5">
-          <div>
-            <h2 className="section-title text-[var(--md-sys-color-on-surface)]">
-              Your activity
-            </h2>
-            <p className="mt-1 text-sm font-normal text-[var(--md-sys-color-on-surface-variant)]">
-              Leads, outreach, and replies for this range.
-            </p>
-          </div>
-
-          <div className="mt-4">
-            {chartLoading ? (
-              <div
-                className="analysis-chart"
-                aria-label="Loading activity"
-                role="status"
-              >
+          {chartLoading ? (
+            <>
+              {activityHeading}
+              <div className="analysis-chart mt-4" aria-label="Loading activity" role="status">
                 <Skeleton className="h-[240px] w-full rounded-lg" />
               </div>
-            ) : (
-              <AnalysisChart
-                leads={loadedLeads}
-                conversations={loadedConversations}
-                enrollments={loadedEnrollments}
-                activityDays={loadedActivityDays}
-                maxDays={
-                  activeRange.key === "month"
-                    ? currentMonthDay
-                    : activeRange.days
-                }
-                startDateKey={chartStartDateKey}
-                endDateKey={chartEndDateKey}
-              />
-            )}
-          </div>
+            </>
+          ) : (
+            <AnalysisChart
+              heading={activityHeading}
+              leads={loadedLeads}
+              conversations={loadedConversations}
+              enrollments={loadedEnrollments}
+              activityDays={loadedActivityDays}
+              maxDays={
+                activeRange.key === "month"
+                  ? currentMonthDay
+                  : activeRange.days
+              }
+              startDateKey={chartStartDateKey}
+              endDateKey={chartEndDateKey}
+            />
+          )}
         </div>
 
         <Link

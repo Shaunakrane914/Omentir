@@ -579,7 +579,9 @@ export default function AuthChoice({
       ? "Reset your password"
       : verifyingEmail
         ? "Check your email"
-        : "Welcome to Omentir";
+        : isSignup
+          ? "Create your account"
+          : "Log in to your account";
   const subtitle =
     formMode === "reset-request"
       ? "Enter the email on your account."
@@ -589,17 +591,14 @@ export default function AuthChoice({
           ? verifyMode === "signup" || signInCodeStrategy === "email_code"
             ? "We sent a verification code to your inbox."
             : "Enter the verification code to finish signing in."
-          : AUTH_TAGLINE;
+          : isSignup
+            ? AUTH_TAGLINE
+            : undefined;
 
   const goToPassword = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setStage("password");
-  };
-
-  const backToIdentity = () => {
-    setStage("identity");
-    setError("");
   };
 
   const backToLogin = () => {
@@ -612,18 +611,6 @@ export default function AuthChoice({
   return (
     <div className="w-full">
       <AuthHeading title={heading} subtitle={subtitle} />
-
-      {formMode === "default" && stage === "identity" && !verifyingEmail ? (
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={disabled}
-          className="auth-social mb-6 gap-2.5"
-        >
-          <GoogleMark />
-          Continue with Google
-        </button>
-      ) : null}
 
       {formMode === "reset-request" ? (
         <form onSubmit={handleResetRequest} className="grid gap-4">
@@ -693,7 +680,7 @@ export default function AuthChoice({
           className="grid gap-4"
         >
           {isSignup ? (
-            <div className={`grid grid-cols-2 gap-3 ${stage === "password" ? "hidden" : ""}`}>
+            <div className={`grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 ${stage === "password" ? "hidden" : ""}`}>
               <AuthField
                 label="First name"
                 name="firstName"
@@ -758,19 +745,32 @@ export default function AuthChoice({
                 : "Continue"}
           </button>
 
-          {stage === "password" ? (
-            <button type="button" onClick={backToIdentity} className="auth-link justify-self-start text-[13px]">
-              Back
-            </button>
-          ) : null}
         </form>
       )}
+
+      {/* Email first, then the social option under an "or" rule. */}
+      {formMode === "default" && stage === "identity" && !verifyingEmail ? (
+        <>
+          <div className="auth-or" role="separator">
+            <span>or</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={disabled}
+            className="auth-social gap-2.5"
+          >
+            <GoogleMark />
+            Continue with Google
+          </button>
+        </>
+      ) : null}
 
       {formMode === "default" && !verifyingEmail ? (
         <AuthSwitchLine>
           {isSignup ? "Already have an account? " : "Don't have an account? "}
-          <Link href={isSignup ? "/login" : "/signup"} className="auth-link">
-            {isSignup ? "Sign in" : "Sign up"}
+          <Link href={isSignup ? "/login" : "/signup"} className="auth-link auth-switch-link">
+            {isSignup ? "Log in" : "Sign up"} <span aria-hidden="true">&rarr;</span>
           </Link>
         </AuthSwitchLine>
       ) : null}

@@ -263,8 +263,8 @@ export default function MinimumBookingGuaranteePage() {
           {policySections.map((section) => (
             <section key={section.title}>
               <h2
-                style={{ fontFamily: "var(--font-varta)" }}
-                className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+                style={{ fontFamily: "var(--font-cal-display)" }}
+                className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
               >
                 {section.title}
               </h2>

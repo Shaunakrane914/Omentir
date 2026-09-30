@@ -1,59 +1,65 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import { hostedContactEmail, hostedGithubRepo } from "@/lib/hosted-identity";
+import { hostedGithubRepo } from "@/lib/hosted-identity";
 import { AskAiMenu } from "./ask-ai-menu";
 import FeatureMenu from "./feature-menu";
 import GithubStarButton from "./github-star-button";
 import HeaderAuth from "./header-auth";
 import LogoMark from "./logo-mark";
 import MarketingHeaderFrame from "./marketing-header-frame";
+import MarketingFooter from "./marketing-footer";
 import { MarketingMobileMenuButton } from "./marketing-mobile-nav";
-import SiteThemeToggle from "./site-theme-toggle";
 
+export { MarketingFooter };
+
+/** `cal-site` marks a marketing page: while it is mounted, globals.css swaps
+ *  the site palette for the marketing theme (see the Calendly-style block). */
 export function MarketingHeader({ transparentAtTop = false }: { transparentAtTop?: boolean }) {
   return (
-    <MarketingHeaderFrame transparentAtTop={transparentAtTop}>
-      {/* Width + gutters from .omentir-primary-width.
-          Desktop: logo | nav centered in full header | actions */}
-      <header className="omentir-primary-width relative flex h-[52px] min-w-0 items-center gap-2 md:gap-4">
-        <div className="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
-          <Link
-            href="/"
-            className="flex min-w-0 shrink-0 select-none items-center gap-1.5 text-[18px] font-medium leading-none tracking-tight text-[var(--md-sys-color-on-surface)] md:gap-2 md:text-[20px]"
-          >
-            <LogoMark className="h-5 w-5 md:h-6 md:w-6" />
-            <span className="truncate">Omentir</span>
-          </Link>
-          {/* Remote GitHub data is cosmetic. Render the link immediately so a
-              slow API response cannot hold back the entire landing header. */}
-          <Suspense fallback={<GithubStarButtonFallback />}>
-            <GithubStarButton />
-          </Suspense>
-        </div>
-
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 text-sm font-normal text-[var(--md-sys-color-on-surface)] md:flex lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2">
-          <FeatureMenu />
-          <Link href="/integrations" className="site-nav-link">Integrations</Link>
-          <Link href="/pricing" className="site-nav-link">Pricing</Link>
-          <AskAiMenu />
-        </nav>
-
-        {/* ml-auto keeps actions on the right: on mobile the nav is hidden, and on lg
-            the nav is absolutely centered (out of flex flow), so nothing else pushes right */}
-        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 md:gap-2">
-          {/* Desktop: auth CTAs */}
-          <div className="hidden items-center gap-2 md:flex">
-            {/* Session resolution is allowed to finish after the usable header
-                has streamed. Signed-out CTAs are the safe initial fallback. */}
-            <Suspense fallback={<HeaderAuthFallback />}>
-              <HeaderAuth />
+    <div className="cal-site cal-header">
+      <MarketingHeaderFrame transparentAtTop={transparentAtTop}>
+        {/* Width + gutters from .omentir-primary-width.
+            Desktop: logo | nav centered in full header | actions */}
+        <header className="omentir-primary-width relative flex h-[52px] min-w-0 items-center gap-2 md:gap-4">
+          <div className="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
+            <Link
+              href="/"
+              className="flex min-w-0 shrink-0 select-none items-center gap-1.5 text-[18px] font-medium leading-none tracking-tight text-[var(--md-sys-color-on-surface)] md:gap-2 md:text-[20px]"
+            >
+              <LogoMark className="h-5 w-5 md:h-6 md:w-6" />
+              <span className="truncate">Omentir</span>
+            </Link>
+            {/* Remote GitHub data is cosmetic. Render the link immediately so a
+                slow API response cannot hold back the entire landing header. */}
+            <Suspense fallback={<GithubStarButtonFallback />}>
+              <GithubStarButton />
             </Suspense>
           </div>
-          {/* Mobile: hamburger on the right → full-screen menu (icon becomes close) */}
-          <MarketingMobileMenuButton />
-        </div>
-      </header>
-    </MarketingHeaderFrame>
+
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 text-sm font-normal text-[var(--md-sys-color-on-surface)] md:flex lg:absolute lg:left-1/2 lg:flex-none lg:-translate-x-1/2">
+            <FeatureMenu />
+            <Link href="/integrations" className="site-nav-link">Integrations</Link>
+            <Link href="/pricing" className="site-nav-link">Pricing</Link>
+            <AskAiMenu />
+          </nav>
+
+          {/* ml-auto keeps actions on the right: on mobile the nav is hidden, and on lg
+              the nav is absolutely centered (out of flex flow), so nothing else pushes right */}
+          <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 md:gap-2">
+            {/* Desktop: auth CTAs */}
+            <div className="hidden items-center gap-2 md:flex">
+              {/* Session resolution is allowed to finish after the usable header
+                  has streamed. Signed-out CTAs are the safe initial fallback. */}
+              <Suspense fallback={<HeaderAuthFallback />}>
+                <HeaderAuth />
+              </Suspense>
+            </div>
+            {/* Mobile: hamburger on the right → full-screen menu (icon becomes close) */}
+            <MarketingMobileMenuButton />
+          </div>
+        </header>
+      </MarketingHeaderFrame>
+    </div>
   );
 }
 
@@ -80,7 +86,7 @@ function GithubStarButtonFallback() {
 function HeaderAuthFallback() {
   return (
     <>
-      <Link href="/login" className="site-nav-link">
+      <Link href="/login" className="site-btn site-btn-sm site-btn-outline">
         Sign in
       </Link>
       <Link href="/demo" className="site-btn site-btn-sm site-btn-outline">
@@ -90,170 +96,6 @@ function HeaderAuthFallback() {
         Get started
       </Link>
     </>
-  );
-}
-
-const footerColumns: Array<[string, ...Array<[label: string, href: string]>]> = [
-  [
-    "Product",
-    ["Features", "/features"],
-    ["Free tools", "/tools"],
-    ["LinkedIn profile rating", "/tools/linkedin-profile-rating"],
-    ["Improve LinkedIn profile", "/tools/improve-linkedin-profile"],
-    ["Find leads", "/tools/find-leads"],
-    ["Pricing", "/pricing"],
-    ["Use cases", "/use-cases"],
-    ["Founder outbound", "/use-cases/outbound-for-founders"],
-    ["Grok Bot outbound", "/use-cases/grok-bot-outbound"],
-    ["Grok Bot cold messaging", "/use-cases/grok-bot-cold-messaging"],
-    ["Grok Bot Sales Navigator", "/use-cases/grok-bot-sales-navigator"],
-    ["Claude Code outbound", "/use-cases/claude-code-outbound"],
-    ["Cursor outbound", "/use-cases/cursor-outbound"],
-    ["Codex outbound", "/use-cases/codex-outbound"],
-    ["Book LinkedIn demos", "/use-cases/book-linkedin-demos"],
-    ["Blogs", "/blogs"],
-    ["Open Source", "/blogs/omentir-is-now-open-source"],
-  ],
-  [
-    "Company",
-    ["About", "/about"],
-    ["Help", "/help"],
-    ["Minimum Booking Guarantee", "/minimum-booking-guarantee"],
-    ["Privacy Policy", "/privacy-policy"],
-    ["Terms of Service", "/terms-of-service"],
-  ],
-  [
-    "Integrations",
-    ["Claude", "/integrations/claude"],
-    ["ChatGPT", "/integrations/chatgpt"],
-    ["Cursor", "/integrations/cursor"],
-    ["MCP", "/integrations/mcp"],
-    ["Grok", "/integrations/grok"],
-    ["Grok Bot", "/integrations/grok-bot"],
-    ["OpenClaw", "/integrations/openclaw"],
-    ["REST API", "/integrations/rest-api"],
-    ["Claude Code", "/integrations/claude-code"],
-    ["Codex", "/integrations/codex"],
-  ],
-  [
-    "Alternatives",
-    ["All matchups", "/comparisons"],
-    ["Gojiberry Alternatives", "/comparisons/omentir-vs-gojiberry"],
-    ["Apollo Alternatives", "/comparisons/omentir-vs-apollo"],
-    ["Instantly Alternatives", "/comparisons/omentir-vs-instantly"],
-    ["Smartlead Alternatives", "/comparisons/omentir-vs-smartlead"],
-    ["Artisan AI Alternatives", "/comparisons/omentir-vs-artisan"],
-    ["11x AI Alternatives", "/comparisons/omentir-vs-11x"],
-    ["Lusha Alternatives", "/comparisons/omentir-vs-lusha"],
-    ["Clay Alternatives", "/comparisons/omentir-vs-clay"],
-    ["Cognism Alternatives", "/comparisons/omentir-vs-cognism"],
-    ["HeyReach Alternatives", "/comparisons/omentir-vs-heyreach"],
-    ["Expandi Alternatives", "/comparisons/omentir-vs-expandi"],
-    ["Dripify Alternatives", "/comparisons/omentir-vs-dripify"],
-    ["Waalaxy Alternatives", "/comparisons/omentir-vs-waalaxy"],
-    ["LinkedHelper Alternatives", "/comparisons/omentir-vs-linkedhelper"],
-    ["Self-Host vs Hosted Omentir", "/comparisons/self-host-vs-hosted"],
-    ["Lemlist Alternatives", "/comparisons/omentir-vs-lemlist"],
-    ["Sales Navigator Alternatives", "/comparisons/omentir-vs-sales-navigator"],
-    ["Category roundups", "/alternatives"],
-    ["Grok Bot Alternatives", "/alternatives/grok-bot"],
-  ],
-];
-
-const mobileProductLabels = new Set([
-  "Features",
-  "Free tools",
-  "LinkedIn profile rating",
-  "Improve LinkedIn profile",
-  "Find leads",
-  "Pricing",
-  "Use cases",
-  "Blogs",
-  "Open Source",
-]);
-
-const mobileFooterColumns = footerColumns
-  .filter(([heading]) => heading !== "Alternatives")
-  .map(([heading, ...links]) =>
-    heading === "Product"
-      ? ([heading, ...links.filter(([label]) => mobileProductLabels.has(label))] as (typeof footerColumns)[number])
-      : ([heading, ...links] as (typeof footerColumns)[number]),
-  );
-
-// Hosted product brand links — intentional in source (public website identity).
-// Local mode never renders marketing shell (non-app routes 404).
-const footerSocialLinks = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/121943897" },
-  { label: "X", href: "https://x.com/OmentirAI" },
-  { label: "GitHub", href: `https://github.com/${hostedGithubRepo()}` },
-  { label: "Product Hunt", href: "https://www.producthunt.com/products/omentir" },
-  { label: "Email", href: `mailto:${hostedContactEmail()}` },
-];
-
-function FooterColumn({ heading, links }: { heading: string; links: Array<[string, string]> }) {
-  return (
-    <div className="min-w-0">
-      <h3 className="site-footer-heading mb-4">{heading}</h3>
-      <ul className="space-y-2.5">
-        {links.map(([label, href]) => (
-          <li key={label}>
-            <Link href={href} className="site-footer-link">
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ConnectColumn() {
-  return (
-    <div className="min-w-0">
-      <h3 className="site-footer-heading mb-4">Connect</h3>
-      <ul className="space-y-2.5">
-        {footerSocialLinks.map((item) => (
-          <li key={item.label}>
-            <a
-              href={item.href}
-              {...(item.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="site-footer-link"
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** Laid out like cursor.com's footer, theme toggle bottom right. */
-export function MarketingFooter() {
-  return (
-    <footer className="site-footer pb-10 pt-14 md:pt-16">
-      <div className="omentir-primary-width">
-        <div className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-10 md:hidden">
-          {mobileFooterColumns.map(([heading, ...links]) => (
-            <FooterColumn key={heading} heading={heading} links={links} />
-          ))}
-          <ConnectColumn />
-        </div>
-        <div className="hidden min-w-0 grid-cols-5 gap-8 md:grid">
-          {footerColumns.map(([heading, ...links]) => (
-            <FooterColumn key={heading} heading={heading} links={links} />
-          ))}
-          <ConnectColumn />
-        </div>
-        <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="site-footer-muted flex select-none items-center gap-2">
-            <LogoMark className="h-4 w-4" />
-            &copy; {new Date().getFullYear()} Omentir. Open Source, MIT licensed.
-          </p>
-          <SiteThemeToggle />
-        </div>
-      </div>
-    </footer>
   );
 }
 
@@ -387,6 +229,82 @@ export function ArticleCrumbs({
   );
 }
 
+/** Calendly-style top for inner marketing pages: the homepage's cream panel
+ *  with crumbs, a display title, an optional lede and extra content (meta
+ *  line, actions) below. */
+export function CalPageHero({
+  crumbs,
+  title,
+  description,
+  children,
+  leading,
+  plain = false,
+}: {
+  crumbs?: ReadonlyArray<ArticleCrumb>;
+  title: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  /** Shown above the title (a topic chip, for example). */
+  leading?: ReactNode;
+  /** No cream panel: the title sits on the page (blog index). */
+  plain?: boolean;
+}) {
+  return (
+    <section className={`cal-hero cal-page-hero${plain ? " cal-page-hero-plain" : ""}`}>
+      <div className="cal-page-hero-inner">
+        {crumbs && crumbs.length > 0 ? (
+          <ArticleCrumbs crumbs={crumbs} className="mb-6 justify-center" />
+        ) : null}
+        {leading}
+        <h1 className="cal-page-title">{title}</h1>
+        {description ? <p className="cal-lead">{description}</p> : null}
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/** Link list shown as rounded cards (related pages, directories). */
+export function CalLinkCards({
+  links,
+}: {
+  links: ReadonlyArray<{ href: string; label: ReactNode; description?: ReactNode }>;
+}) {
+  return (
+    <ul className="cal-link-cards">
+      {links.map((link) => (
+        <li key={link.href}>
+          <Link href={link.href} className="cal-link-card">
+            <span className="min-w-0">
+              <strong>{link.label}</strong>
+              {link.description ? <small>{link.description}</small> : null}
+            </span>
+            <span aria-hidden="true" className="cal-link-card-arrow">
+              &rarr;
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Closing sign-up panel at the end of articles, help and blog posts. */
+export function CalCtaPanel() {
+  return (
+    <div className="cal-cta-panel">
+      <p className="cal-read-h2">Run the outreach from your own LinkedIn account</p>
+      <p className="cal-lead">
+        Omentir finds ICP-fit buyers, drafts connection notes and messages, and keeps
+        replies in one inbox. You still choose the daily send limits.
+      </p>
+      <Link href="/signup" className="site-btn site-btn-primary mt-8">
+        Try Omentir
+      </Link>
+    </div>
+  );
+}
+
 /** Narrow article chrome shared with /help pages. */
 export function MarketingArticle({
   title,
@@ -407,38 +325,13 @@ export function MarketingArticle({
   return (
     <main className="site-theme min-h-screen overflow-x-hidden">
       <MarketingHeader transparentAtTop />
-      {/* cursor.com article layout: crumbs in a sticky left column. */}
-      <div className="omentir-primary-width grid min-w-0 gap-6 pb-20 pt-28 md:grid-cols-[12rem_minmax(0,42rem)] md:gap-16 md:pb-28 md:pt-32 lg:grid-cols-[14rem_minmax(0,42rem)] lg:gap-24">
-        <div className="md:sticky md:top-28 md:self-start">
-          <ArticleCrumbs crumbs={trail} className="" />
-        </div>
-        <article className="min-w-0">
-          <h1 className="text-[1.75rem] leading-tight tracking-[-0.0125em] text-[var(--site-text)] md:text-[2rem]">
-            {title}
-          </h1>
-          {updated ? (
-            <p className="mt-2 text-sm text-[var(--site-text-2)]">Last updated {updated}</p>
-          ) : null}
-          {description ? (
-            <p className="mt-6 text-base leading-7 text-[var(--site-text-2)]">{description}</p>
-          ) : null}
-
-          <div className="mt-10 md:mt-12">{children}</div>
-
-          <div className="mt-16 rounded-[16px] border border-[var(--site-border)] bg-[var(--site-card)] px-6 py-8 md:px-8">
-            <p className="text-lg text-[var(--site-text)]">
-              Run the outreach from your own LinkedIn account
-            </p>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-[var(--site-text-2)]">
-              Omentir finds ICP-fit buyers, drafts connection notes and messages, and keeps
-              replies in one inbox. You still choose the daily send limits.
-            </p>
-            <Link href="/signup" className="site-btn site-btn-sm site-btn-primary mt-6">
-              Try Omentir
-            </Link>
-          </div>
-        </article>
-      </div>
+      <CalPageHero crumbs={trail} title={title} description={description}>
+        {updated ? <p className="cal-page-meta">Last updated {updated}</p> : null}
+      </CalPageHero>
+      <article className="cal-read">
+        {children}
+        <CalCtaPanel />
+      </article>
       <MarketingFooter />
     </main>
   );

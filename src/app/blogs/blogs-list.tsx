@@ -1,5 +1,5 @@
 import type { BlogItem } from "@/lib/cms";
-import { DEFAULT_BLOG_AUTHOR, shortBlogDate } from "./blog-post-template";
+import { shortBlogDate } from "./blog-post-template";
 import BlogsTable, { type BlogRow } from "./blogs-table";
 
 type BlogsListProps = {
@@ -63,7 +63,7 @@ function sortByNewestPublishedDate(a: BlogItem, b: BlogItem) {
   return a.slug > b.slug ? 1 : -1;
 }
 
-/** Every post, newest first, in a filterable table. Nothing is pinned. */
+/** Every post, newest first, filterable; the newest one is featured. */
 export default function BlogsList({ blogs }: BlogsListProps) {
   const sorted = [...blogs].sort(sortByNewestPublishedDate);
 
@@ -79,8 +79,6 @@ export default function BlogsList({ blogs }: BlogsListProps) {
     description: blog.description,
     category: blog.category,
     date: shortBlogDate(blog.publishedDate),
-    author: DEFAULT_BLOG_AUTHOR.name,
-    readTime: blog.readTime.replace(/^(\d+)\s*min.*$/i, "$1m"),
   }));
 
   return <BlogsTable rows={rows} categories={categories} />;

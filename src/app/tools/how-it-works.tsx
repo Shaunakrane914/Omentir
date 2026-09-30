@@ -60,8 +60,8 @@ export default function ToolHowItWorks({
               Step {index + 1}
             </p>
             <h3
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="mt-2 text-lg font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="mt-2 text-lg font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
             >
               {step.title}
             </h3>

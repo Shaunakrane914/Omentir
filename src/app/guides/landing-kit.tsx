@@ -14,8 +14,8 @@ export function LandingSection({
   return (
     <section id={id} className="scroll-mt-28">
       <h2
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="max-w-3xl text-[1.65rem] font-semibold leading-tight tracking-tight text-[var(--md-sys-color-on-surface)] md:text-3xl"
+        style={{ fontFamily: "var(--font-cal-display)" }}
+        className="max-w-3xl text-[1.65rem] font-medium leading-tight tracking-tight text-[var(--md-sys-color-on-surface)] md:text-3xl"
       >
         {title}
       </h2>

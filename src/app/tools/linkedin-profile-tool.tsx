@@ -17,8 +17,7 @@ import {
 } from "@/lib/linkedin-profile-tool";
 import { ALL_TOOLS } from "./tools-data";
 
-const FIELD_CLASS =
-  "mt-2 w-full rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] px-4 py-3 text-base leading-6 text-[var(--md-sys-color-on-surface)] outline-none placeholder:text-[var(--md-sys-color-on-surface-variant)] focus:border-[var(--md-sys-color-outline)]";
+const FIELD_CLASS = "site-input mt-2 w-full";
 
 const SCORE_ROWS: Array<{
   key: keyof LinkedInProfileRatingResult["scores"];
@@ -50,7 +49,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       type="button"
       onClick={() => void copy()}
       disabled={!text}
-      className="rounded-full border border-[var(--md-sys-color-outline-variant)] px-3 py-1.5 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] transition-colors hover:border-[var(--md-sys-color-outline)] hover:text-[var(--md-sys-color-on-surface)] disabled:opacity-50"
+      className="cal-filter-pill border border-[var(--site-border)] disabled:opacity-50"
     >
       {copied ? "Copied" : `Copy ${label}`}
     </button>
@@ -91,7 +90,7 @@ function ToolCta({ mode }: { mode: LinkedInProfileToolMode }) {
       </p>
       <Link
         href="/signup"
-        className="m3-btn m3-btn-filled-secondary mt-5 inline-flex h-11 cursor-pointer px-6 text-sm"
+        className="site-btn site-btn-outline mt-5"
       >
         Create a free account
       </Link>
@@ -132,8 +131,8 @@ function RatingResult({ rating }: { rating: LinkedInProfileRatingResult }) {
       {rating.strengths.length > 0 ? (
         <div className="mt-8">
           <h3
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="text-xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="text-xl font-medium tracking-tight"
           >
             What is working
           </h3>
@@ -148,8 +147,8 @@ function RatingResult({ rating }: { rating: LinkedInProfileRatingResult }) {
       {rating.gaps.length > 0 ? (
         <div className="mt-8">
           <h3
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="text-xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="text-xl font-medium tracking-tight"
           >
             What to fix
           </h3>
@@ -164,8 +163,8 @@ function RatingResult({ rating }: { rating: LinkedInProfileRatingResult }) {
       {rating.nextFixes.length > 0 ? (
         <div className="mt-8">
           <h3
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="text-xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="text-xl font-medium tracking-tight"
           >
             Do these next
           </h3>
@@ -196,8 +195,8 @@ function ImproveResult({ improve }: { improve: LinkedInProfileImproveResult }) {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h3
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight"
             >
               Suggested headline
             </h3>
@@ -213,8 +212,8 @@ function ImproveResult({ improve }: { improve: LinkedInProfileImproveResult }) {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h3
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight"
             >
               Suggested About
             </h3>
@@ -230,8 +229,8 @@ function ImproveResult({ improve }: { improve: LinkedInProfileImproveResult }) {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h3
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight"
             >
               Suggested experience
             </h3>
@@ -247,8 +246,8 @@ function ImproveResult({ improve }: { improve: LinkedInProfileImproveResult }) {
         <div>
           <div className="flex items-center justify-between gap-3">
             <h3
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight"
             >
               Suggested skills line
             </h3>
@@ -263,8 +262,8 @@ function ImproveResult({ improve }: { improve: LinkedInProfileImproveResult }) {
       {improve.changes.length > 0 ? (
         <div>
           <h3
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="text-xl font-semibold tracking-tight"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="text-xl font-medium tracking-tight"
           >
             What changed
           </h3>
@@ -387,7 +386,7 @@ export default function LinkedInProfileTool({ mode }: { mode: LinkedInProfileToo
         <button
           type="submit"
           disabled={busy}
-          className="m3-btn m3-btn-filled mt-5 h-11 w-full cursor-pointer px-6 text-sm disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+          className="site-btn site-btn-primary mt-5 w-full disabled:cursor-wait sm:w-auto"
         >
           {busy ? pendingLabel : submitLabel}
         </button>

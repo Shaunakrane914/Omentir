@@ -1,6 +1,5 @@
 import Link from "next/link";
-import HeaderAuth from "./header-auth";
-import LogoMark from "./logo-mark";
+import { CalLinkCards, CalPageHero, MarketingFooter, MarketingHeader } from "./marketing-shell";
 import { createPageMetadata } from "./seo";
 
 export const metadata = createPageMetadata({
@@ -9,51 +8,41 @@ export const metadata = createPageMetadata({
   noIndex: true,
 });
 
+/** Where a lost visitor most likely wanted to go. */
+const DESTINATIONS = [
+  { href: "/features", label: "Features", description: "Lead finders, AI outreach, the inbox and more" },
+  { href: "/integrations", label: "Integrations", description: "Run Omentir from Claude, ChatGPT, Cursor or code" },
+  { href: "/pricing", label: "Pricing", description: "Plans and the booking guarantee" },
+  { href: "/help", label: "Help", description: "Short answers to LinkedIn outreach questions" },
+];
+
+/* Same chrome as the other inner pages: the cream hero panel, then link
+   cards on the page, then the footer. */
 export default function NotFound() {
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)]">
-      {/* Minimal header: logo + auth only, no marketing nav links. */}
-      <header className="w-full shrink-0 bg-[var(--md-sys-color-surface-container)]">
-        <div className="mx-auto flex h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8">
-          <Link
-            href="/"
-            className="flex min-w-0 shrink-0 select-none items-center gap-2 text-[22px] font-medium leading-none tracking-tight text-[var(--md-sys-color-on-surface)]"
-          >
-            <LogoMark />
-            Omentir
-          </Link>
-          <div className="flex min-w-0 shrink-0 items-center gap-2">
-            <HeaderAuth />
-          </div>
-        </div>
-      </header>
+    <main className="site-theme min-h-screen overflow-x-clip">
+      <MarketingHeader transparentAtTop />
 
-      <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 pb-14 text-center sm:px-8">
-        <p
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="text-gradient-brand text-[5rem] font-semibold leading-none tracking-tight sm:text-[8rem]"
-        >
-          404
-        </p>
-        <h1
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="mt-4 text-3xl font-semibold tracking-tight text-black sm:text-4xl"
-        >
-          This page wandered off.
-        </h1>
-        <p className="mt-5 max-w-xl text-base leading-8 text-zinc-600 sm:text-lg">
-          The page you are looking for does not exist, may have moved, or the link
-          was mistyped. Let&apos;s get you back to finding customers.
-        </p>
-        <div className="m3-btn-pair m3-btn-pair--lg mt-10 flex flex-col items-center gap-3 sm:flex-row">
-          <Link href="/" className="m3-btn m3-btn-filled">
+      <CalPageHero
+        leading={<span className="cal-post-tag mb-6">Error 404</span>}
+        title="This page wandered off."
+        description="The page you are looking for does not exist, may have moved, or the link was mistyped. Let's get you back to finding customers."
+      >
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+          <Link href="/" className="site-btn site-btn-primary">
             Back to home
           </Link>
-          <Link href="/blogs" className="m3-btn m3-btn-outlined">
+          <Link href="/blogs" className="site-btn site-btn-outline">
             Read the blog
           </Link>
         </div>
-      </section>
+      </CalPageHero>
+
+      <div className="cal-read">
+        <CalLinkCards links={DESTINATIONS} />
+      </div>
+
+      <MarketingFooter />
     </main>
   );
 }

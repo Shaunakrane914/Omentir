@@ -9,7 +9,7 @@ export function HighlightStrip({ items }: { items: string[] }) {
       {items.map((item) => (
         <li
           key={item}
-          className="rounded-full border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] px-3 py-1 text-sm text-[var(--md-sys-color-on-surface)]"
+          className="rounded-full bg-[var(--cal-blue-soft)] px-3 py-1 text-sm font-medium text-[var(--cal-blue)]"
         >
           {item}
         </li>
@@ -21,7 +21,7 @@ export function HighlightStrip({ items }: { items: string[] }) {
 export function VerdictBanner({ page }: { page: SeoContentPage }) {
   if (!page.verdict) return null;
   return (
-    <p className="rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] px-5 py-4 text-base leading-8 text-[var(--md-sys-color-on-surface)]">
+    <p className="cal-answer">
       {page.verdict}
     </p>
   );
@@ -36,20 +36,20 @@ export function TimelineWeeks({ phases }: { phases: SeoPhase[] }) {
         return (
           <li key={phase.title} className="flex gap-4 sm:gap-6">
             <div className="flex w-7 shrink-0 flex-col items-center">
-              <span className="relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--md-sys-color-primary)] text-xs font-semibold text-[var(--md-sys-color-on-primary)]">
+              <span className="relative z-10 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--cal-blue-soft)] text-xs font-semibold text-[var(--cal-blue)]">
                 {index + 1}
               </span>
               {last ? null : (
                 <span
-                  className="w-0.5 min-h-4 flex-1 bg-[var(--md-sys-color-primary)]"
+                  className="w-px min-h-4 flex-1 bg-[var(--site-border)]"
                   aria-hidden="true"
                 />
               )}
             </div>
             <div className={last ? undefined : "pb-10"}>
               <p
-                style={{ fontFamily: "var(--font-varta)" }}
-                className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+                style={{ fontFamily: "var(--font-cal-display)" }}
+                className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
               >
                 {phase.title}
               </p>
@@ -71,18 +71,18 @@ export function RoundupList({ items }: { items: SeoRoundupItem[] }) {
       {items.map((item, index) => (
         <li
           key={item.name}
-          className="grid gap-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-5 sm:grid-cols-[auto_1fr] sm:p-6"
+          className="grid gap-4 rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)] p-5 sm:grid-cols-[auto_1fr] sm:p-6"
         >
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--md-sys-color-primary)] text-sm font-semibold text-[var(--md-sys-color-on-primary)]">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--cal-blue-soft)] text-sm font-semibold text-[var(--cal-blue)]">
               {index + 1}
             </span>
             <BrandLogo brand={item.name} size="md" decorative={false} />
           </div>
           <div className="min-w-0">
             <p
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
             >
               {item.name}
             </p>
@@ -104,8 +104,8 @@ export function RoundupList({ items }: { items: SeoRoundupItem[] }) {
 export function ThreadPreview({ lines }: { lines: SeoThreadLine[] }) {
   if (lines.length === 0) return null;
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)]">
-      <p className="border-b border-[var(--md-sys-color-outline-variant)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--md-sys-color-on-surface-variant)]">
+    <div className="overflow-hidden rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)]">
+      <p className="border-b border-[var(--site-border)] px-5 py-3 text-sm font-medium text-[var(--cal-muted)]">
         A reply thread, not a sequence
       </p>
       <ol className="space-y-3 p-5">
@@ -116,7 +116,7 @@ export function ThreadPreview({ lines }: { lines: SeoThreadLine[] }) {
               ? "rounded-2xl rounded-tl-md bg-[var(--md-sys-color-surface-container-high)]"
               : line.speaker === "draft"
                 ? "rounded-2xl rounded-tr-md border border-dashed border-[var(--md-sys-color-outline)] bg-[var(--md-sys-color-surface)]"
-                : "rounded-2xl rounded-tr-md bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]";
+                : "rounded-2xl rounded-tr-md bg-[var(--cal-blue)] text-white";
           const label =
             line.speaker === "them" ? "Prospect" : line.speaker === "draft" ? "Draft to approve" : "You";
           return (
@@ -140,14 +140,14 @@ export function PhaseCalendar({ phases }: { phases: SeoPhase[] }) {
       {phases.map((phase, index) => (
         <article
           key={phase.title}
-          className="rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-5"
+          className="rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)] p-5"
         >
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--md-sys-color-on-surface-variant)]">
             Week {index + 1}
           </p>
           <p
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="mt-2 text-lg font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="mt-2 text-lg font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
           >
             {phase.title}
           </p>
@@ -172,13 +172,13 @@ export function FaceoffCards({
       {headers.map((header, column) => (
         <article
           key={header}
-          className="flex flex-col rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] p-5"
+          className="flex flex-col rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)] p-5"
         >
           <div className="flex items-center gap-3">
             <BrandLogo brand={header} size="md" decorative={false} />
             <p
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+              style={{ fontFamily: "var(--font-cal-display)" }}
+              className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
             >
               {header}
             </p>

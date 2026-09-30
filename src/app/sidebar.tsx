@@ -15,16 +15,20 @@ const primaryNav = [
 ];
 const STORAGE_KEY = "omentir-sidebar-collapsed";
 
-/* 32px row; outline icons. Selected + hover share a 6px charcoal plate. */
+/* 40px row; outline icons. Hover is a faint plate; the selected item is a
+   pale blue pill with blue ink (--app-nav-active-*, set in globals.css). */
 const navBase =
-  "flex min-h-8 items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-normal transition-colors duration-150";
+  "flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-normal transition-colors duration-150";
 const navActive =
-  "bg-[var(--md-sys-nav-item-active)] text-[var(--md-sys-color-on-surface)]";
+  "bg-[var(--app-nav-active-bg)] text-[var(--app-nav-active-ink)]";
 const navIdle =
   "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-nav-item-active)] hover:text-[var(--md-sys-color-on-surface)]";
 
+/* Same geometry expanded and collapsed: icons stay pinned at one x while the
+   aside width animates, so nothing jumps. The 64px rail leaves exactly a
+   40px square row, which becomes the collapsed hover/active plate. */
 const desktopNavBase =
-  "flex min-h-8 items-center rounded-md py-1.5 text-[13px] font-normal transition-[background-color,color,padding,gap] duration-150";
+  "flex min-h-10 items-center gap-3 overflow-hidden rounded-lg px-[10px] py-2 text-[14px] font-normal transition-colors duration-150";
 
 const collapseBtnClass =
   "flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-[var(--md-sys-color-on-surface-variant)]";
@@ -33,11 +37,8 @@ function navClassName(active: boolean) {
   return `${navBase} ${active ? navActive : navIdle}`;
 }
 
-function desktopNavClassName(active: boolean, collapsed: boolean) {
-  const layout = collapsed
-    ? "h-8 w-8 shrink-0 justify-center gap-0 self-center overflow-hidden p-0"
-    : "gap-2.5 px-2";
-  return `${desktopNavBase} ${layout} ${active ? navActive : navIdle}`;
+function desktopNavClassName(active: boolean) {
+  return `${desktopNavBase} ${active ? navActive : navIdle}`;
 }
 
 function NavIcon({ name }: { name: string }) {
@@ -62,9 +63,9 @@ function SidebarLabel({
 }) {
   return (
     <span
-      className={`min-w-0 translate-y-[0.5px] whitespace-nowrap transition-[max-width,opacity,transform] duration-300 ease-out ${collapsed
-          ? "max-w-0 -translate-x-2 overflow-hidden opacity-0"
-          : "max-w-40 opacity-100"
+      className={`min-w-0 translate-y-[0.5px] whitespace-nowrap transition-opacity ${collapsed
+          ? "opacity-0 duration-100"
+          : "opacity-100 delay-100 duration-200"
         }`}
     >
       {children}
@@ -307,30 +308,32 @@ export default function Sidebar({
 
       {/* Desktop sidebar - collapsible; no edge border — surface contrast only */}
       <aside
-        className={`sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden bg-[var(--md-sys-color-surface)] transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:flex ${isCollapsed ? "w-[3.25rem]" : "w-48"
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden bg-[var(--md-sys-color-surface)] transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:flex ${isCollapsed ? "w-16" : "w-60"
           }`}
       >
-        <div
-          className={`flex h-12 shrink-0 items-center ${
-            isCollapsed ? "justify-center px-1.5" : "px-2"
-          }`}
-        >
-          {isCollapsed ? null : (
-            <Link
-              href="/overview"
-              prefetch
-              className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden px-2 text-[13px] font-medium text-[var(--md-sys-color-on-surface)]"
-            >
-              <LogoMark className="h-5 w-5 shrink-0" />
-              <span className="select-none whitespace-nowrap">Omentir</span>
-            </Link>
-          )}
+        <div className="flex h-16 shrink-0 items-center px-3">
+          {/* Stays mounted and shrinks with the aside; once it is squeezed to
+              its 16px minimum, the chevron's -translate-x-2 centers it in the rail. */}
+          <Link
+            href="/overview"
+            prefetch
+            tabIndex={isCollapsed ? -1 : undefined}
+            aria-hidden={isCollapsed || undefined}
+            className={`flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden pl-2 text-[16px] font-semibold tracking-tight text-[var(--md-sys-color-on-surface)] transition-opacity ${
+              isCollapsed
+                ? "pointer-events-none opacity-0 duration-100"
+                : "opacity-100 delay-100 duration-200"
+            }`}
+          >
+            <LogoMark className="h-6 w-6 shrink-0" />
+            <span className="select-none whitespace-nowrap">Omentir</span>
+          </Link>
           <button
             type="button"
             onClick={toggle}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`${collapseBtnClass} transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] ${
-              isCollapsed ? "rotate-180" : "rotate-0"
+            className={`${collapseBtnClass} transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+              isCollapsed ? "-translate-x-2 rotate-180" : "rotate-0"
             }`}
           >
             <span className="material-symbols-outlined ms-size-20" aria-hidden="true">
@@ -340,8 +343,7 @@ export default function Sidebar({
         </div>
 
         <nav
-          className={`flex flex-1 flex-col gap-0.5 overflow-y-auto pb-3 pt-1 transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${isCollapsed ? "px-1.5" : "px-2"
-            }`}
+          className={`flex flex-1 flex-col gap-0.5 overflow-y-auto pb-3 pt-1 transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)] px-3`}
         >
           {primaryNav.map((item) => {
             const active = linkActive(item.href);
@@ -351,7 +353,7 @@ export default function Sidebar({
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
                 aria-current={active ? "page" : undefined}
-                className={desktopNavClassName(active, isCollapsed)}
+                className={desktopNavClassName(active)}
               >
                 <NavIcon name={item.icon} />
                 <SidebarLabel collapsed={isCollapsed}>{item.label}</SidebarLabel>
@@ -361,8 +363,7 @@ export default function Sidebar({
         </nav>
 
         <div
-          className={`mt-auto flex shrink-0 flex-col pb-2 pt-1 transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${isCollapsed ? "px-1.5" : "px-2"
-            }`}
+          className={`mt-auto flex shrink-0 flex-col pb-2 pt-1 transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)] px-3`}
         >
           {!localMode && showApi ? (
             <Link
@@ -370,7 +371,7 @@ export default function Sidebar({
               prefetch
               title={isCollapsed ? "API" : undefined}
               aria-current={apiActive ? "page" : undefined}
-              className={`mb-0.5 last:mb-0 ${desktopNavClassName(apiActive, isCollapsed)}`}
+              className={`mb-0.5 last:mb-0 ${desktopNavClassName(apiActive)}`}
             >
               <NavIcon name="key" />
               <SidebarLabel collapsed={isCollapsed}>API</SidebarLabel>
@@ -381,14 +382,14 @@ export default function Sidebar({
             prefetch
             title={isCollapsed ? "Settings" : undefined}
             aria-current={settingsActive ? "page" : undefined}
-            className={`mb-0.5 last:mb-0 ${desktopNavClassName(settingsActive, isCollapsed)}`}
+            className={`mb-0.5 last:mb-0 ${desktopNavClassName(settingsActive)}`}
           >
             <NavIcon name="settings" />
             <SidebarLabel collapsed={isCollapsed}>Settings</SidebarLabel>
           </Link>
           {workspaceControl({
             collapsed: isCollapsed,
-            className: `mb-0.5 last:mb-0 ${desktopNavClassName(workspaceActive, isCollapsed)}`,
+            className: `mb-0.5 last:mb-0 ${desktopNavClassName(workspaceActive)}`,
             label: <SidebarLabel collapsed={isCollapsed}>Workspace</SidebarLabel>,
           })}
         </div>

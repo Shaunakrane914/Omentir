@@ -33,6 +33,7 @@ export default function StepUpgrade({ status }: { status?: string }) {
 
       <div className="w-full text-left">
         <PricingCards
+          site
           subscribeCta="Subscribe"
           className="mx-auto mt-10 w-full pb-12 sm:pb-[3.75rem]"
         />

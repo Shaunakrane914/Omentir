@@ -10,10 +10,7 @@ export default function UseCasesDirectory({
   return (
     <div className="space-y-14">
       <section aria-label="Use case list">
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
+        <h2 className="cal-read-h2">
           Use cases
         </h2>
         <SeoTitleList
@@ -25,10 +22,7 @@ export default function UseCasesDirectory({
       </section>
 
       <section aria-label="Who each page is for">
-        <h2
-          style={{ fontFamily: "var(--font-varta)" }}
-          className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-        >
+        <h2 className="cal-read-h2">
           Who it's for
         </h2>
         <ul className="divide-y divide-[var(--md-sys-color-outline-variant)] border-b border-[var(--md-sys-color-outline-variant)]">

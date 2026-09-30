@@ -16,21 +16,14 @@ import {
   pageJsonLd,
   RelatedLinks,
   SectionProse,
-  SeoBanner,
   SeoDocLayout,
   SeoPageChrome,
 } from "./shared";
 import { ProductHomeLink } from "./product-links";
-import { cmsHeroBanner, type SeoContentPage } from "./types";
+import { type SeoContentPage } from "./types";
 
 export default function ComparisonPageView({ page }: { page: SeoContentPage }) {
   const competitor = comparisonBrandFromSlug(page.slug);
-  const banner = cmsHeroBanner(page);
-  const bannerNode = banner ? (
-    <div className="mt-8">
-      <SeoBanner src={banner.src} alt={banner.alt} width={banner.width} height={banner.height} />
-    </div>
-  ) : null;
 
   const faceoff = page.layout === "faceoff" && page.comparisonTable;
   const table = page.comparisonTable
@@ -87,17 +80,13 @@ export default function ComparisonPageView({ page }: { page: SeoContentPage }) {
         as="article"
         crumbs={familyCrumbs("comparisons", page.slug)}
         title={page.title}
-        afterTitle={bannerNode}
         path={`/comparisons/${page.slug}`}
       >
         <VerdictBanner page={page} />
 
         {faceoff && table ? (
           <section aria-label="Three-way comparison">
-            <h2
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-            >
+            <h2 className="cal-read-h2">
               {table.headers.join(", ").replace(/, ([^,]*)$/, ", and $1")}
             </h2>
             <div className="mt-6">
@@ -109,10 +98,7 @@ export default function ComparisonPageView({ page }: { page: SeoContentPage }) {
           </section>
         ) : table ? (
           <section aria-label="Comparison table">
-            <h2
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-            >
+            <h2 className="cal-read-h2">
               {table.headers[0]} and{" "}
               <ProductHomeLink name={table.headers[1]}>{table.headers[1]}</ProductHomeLink>
             </h2>

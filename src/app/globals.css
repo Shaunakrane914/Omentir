@@ -846,6 +846,13 @@ html:has(> body.app-compact):not(:has(.auth-shell)) .m3-dialog-btn {
   font-size: 0.75rem;
 }
 
+/* No rubber-band past the top or bottom of the page: on macOS the bounce
+   dragged the page down and showed an empty band above the header. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 html {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
@@ -7272,8 +7279,66 @@ html.dark .analysis-chart {
   --analysis-chart-tooltip-shadow: none;
 }
 
+/* Single-series bar accent, validated (lightness band, contrast >= 3:1)
+   against the app's panels: #17191d dark, #ffffff light. */
+.analysis-chart {
+  --analysis-chart-accent: #4a8ee8;
+}
+
+:root[data-site-theme="light"] .analysis-chart {
+  --analysis-chart-accent: #1f6fdb;
+}
+
+.analysis-chart__bar {
+  fill: var(--analysis-chart-accent);
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transition: opacity 150ms ease;
+  animation: analysis-chart-grow 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Hovering a day fades the others so the one being read stands out. */
+.analysis-chart__bar[data-dimmed] {
+  opacity: 0.3;
+}
+
+.analysis-chart__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: var(--analysis-chart-accent);
+}
+
+@keyframes analysis-chart-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-chart__bar {
+    animation: none;
+  }
+}
+
+/* Metric picker: the date-range segmented control, with the picked metric
+   outlined in the bar colour. */
+.dashboard-shell .analysis-chart__seg button[aria-pressed="true"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--analysis-chart-accent);
+}
+
+.analysis-chart__total {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-sys-color-text-high, var(--site-text));
+}
+
 .analysis-chart__grid {
   stroke: var(--analysis-chart-grid);
+  stroke-dasharray: 3 4;
 }
 
 .analysis-chart__label {
@@ -7282,11 +7347,6 @@ html.dark .analysis-chart {
 
 .analysis-chart__hover-rule {
   stroke: var(--analysis-chart-hover-rule);
-}
-
-.analysis-chart__hover-band {
-  fill: var(--analysis-chart-hover-rule);
-  opacity: 0.5;
 }
 
 .analysis-chart__point-fill {
@@ -7841,8 +7901,9 @@ html:has(.dashboard-shell) .m3-dialog-btn {
   }
 }
 
-.dashboard-shell .analysis-chart,
-.dashboard-shell .analysis-chart.rounded-xl {
+/* html prefix outranks the `html.dark .analysis-chart` sunk-panel fill. */
+html .dashboard-shell .analysis-chart,
+html .dashboard-shell .analysis-chart.rounded-xl {
   background-color: transparent !important;
 }
 
@@ -8220,6 +8281,116 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
 
 .site-nav-link:hover {
   background-color: var(--md-sys-state-hover);
+}
+
+/* SquircleIcon: tinted squircle tile with a heavy navy glyph. The tones are
+   fixed pastels that read on both light and dark pages. */
+.squircle-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.squircle-icon-tile {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.squircle-icon-tile path {
+  fill: var(--sq-fill);
+}
+
+.squircle-icon.has-ring .squircle-icon-tile path {
+  stroke: var(--cal-ring, #ffffff);
+  stroke-width: 7;
+  paint-order: stroke;
+}
+
+.squircle-icon-glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56%;
+  height: 56%;
+  color: var(--sq-ink);
+}
+
+.squircle-icon.has-ring .squircle-icon-glyph {
+  width: 46%;
+  height: 46%;
+}
+
+.squircle-icon-glyph svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.4;
+}
+
+.squircle-icon.is-blue { --sq-fill: #6bb1ff; --sq-ink: #071a31; }
+.squircle-icon.is-lime { --sq-fill: #d9ee9c; --sq-ink: #071a31; }
+.squircle-icon.is-lavender { --sq-fill: #c2acff; --sq-ink: #071a31; }
+.squircle-icon.is-orange { --sq-fill: #ffb26b; --sq-ink: #071a31; }
+.squircle-icon.is-mint { --sq-fill: #86e0cf; --sq-ink: #071a31; }
+.squircle-icon.is-muted { --sq-fill: #dfe3e8; --sq-ink: #7d8996; }
+
+/* Header feature menu (FeatureMenu): main features with notes on the left,
+   the rest as a plain Platform list. Site palette here; the homepage
+   restyles it in the Calendly-style block at the end of this file. */
+.nav-menu-eyebrow {
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem;
+  border-radius: 12px;
+  color: var(--md-sys-color-on-surface);
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-menu-item:hover,
+.nav-menu-link:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.nav-menu-title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.nav-menu-note {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.nav-menu-side {
+  min-width: 13rem;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.nav-menu-link {
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Hero: small regular-weight statement, not a display headline. */
@@ -8601,41 +8772,52 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
   border-radius: 16px !important;
 }
 
-/* ── App: cursor.com/dashboard ──────────────────────────────────────────────
-   Measured from cursor.com/dashboard (2026-09-25). Dark: canvas #141414,
-   sidebar and cards #181818, ink #f0f0f0. Light: canvas #f5f5f5, sidebar
-   #f3f3f3, cards #fcfcfc, ink #141414. Secondary ink 74% / 60%, hairlines 8%
-   (inputs 12%), 28px controls with 6px corners, 12px cards. Cursor's greys
-   are neutral; ours keep a slight olive tint instead of brown.
+/* ── App: Calendly-style dashboard ─────────────────────────────────────────
+   Measured from calendly.com/app (2026-09-30). Light: canvas #f8f9f9 with
+   the sidebar sitting on it, content in white panels with 16px corners, ink
+   #0b0d0f, secondary #545f69, hairlines #e4e6e9, the selected nav item a
+   #d5e8fe pill with #1e5ea7 ink, 12px control corners. Dark keeps the same
+   structure on near-black blue-greys.
    :root:has() rather than .dashboard-shell so portalled menus, dialogs and
-   toasts match the app. The marketing site keeps the palette above. */
+   toasts match the app. The marketing site keeps its own palette. */
 :root:has(.dashboard-shell) {
-  --site-bg: #131510;
-  --site-card: #181a15;
-  --site-card-2: #1e211b;
-  --site-card-3: #252821;
-  --site-card-4: #2c2f28;
-  --site-text: #eff1eb;
-  --site-border: color-mix(in oklab, var(--site-text) 8%, transparent);
-  --site-text-2: color-mix(in oklab, var(--site-text) 74%, transparent);
-  --site-text-3: color-mix(in oklab, var(--site-text) 60%, transparent);
-  --app-field-border: color-mix(in oklab, var(--site-text) 12%, transparent);
-  --app-field-border-focus: color-mix(in oklab, var(--site-text) 28%, transparent);
+  --site-bg: #0f1114;
+  --site-card: #17191d;
+  --site-card-2: #1e2126;
+  --site-card-3: #262a30;
+  --site-card-4: #2e333a;
+  --site-text: #eef1f4;
+  --site-sidebar: var(--site-bg);
+  --site-border: #2a2f36;
+  --site-text-2: #a4aeb8;
+  --site-text-3: #7c8793;
+  --app-field-border: #3a414a;
+  --app-field-border-focus: #6f7b88;
+  --app-nav-active-bg: #1a2c45;
+  --app-nav-active-ink: #8dbdf7;
   --md-sys-color-field-outline: var(--app-field-border);
-  --md-sys-color-field-outline-hover: color-mix(in oklab, var(--site-text) 20%, transparent);
+  --md-sys-color-field-outline-hover: #4a525c;
 }
 
 :root[data-site-theme="light"]:has(.dashboard-shell) {
-  --site-bg: #f4f5f2;
-  --site-card: #fbfcfa;
-  --site-card-2: #eef0eb;
-  --site-card-3: #e7e9e3;
-  --site-card-4: #dfe2da;
-  --site-text: #141414;
-  --site-sidebar: #f2f3ef;
+  --site-bg: #f8f9f9;
+  --site-card: #ffffff;
+  --site-card-2: #f3f5f7;
+  --site-card-3: #e9edf1;
+  --site-card-4: #dde3e9;
+  --site-text: #0b0d0f;
+  --site-sidebar: var(--site-bg);
+  --site-border: #e4e6e9;
+  --site-text-2: #545f69;
+  --site-text-3: #81909c;
+  --app-field-border: #c3cad1;
+  --app-field-border-focus: #545f69;
+  --app-nav-active-bg: #d5e8fe;
+  --app-nav-active-ink: #1e5ea7;
+  --md-sys-color-field-outline-hover: #81909c;
   --color-zinc-300: var(--app-field-border);
-  --ink-soft: color-mix(in oklab, var(--site-text) 74%, transparent);
-  --ink-faint: color-mix(in oklab, var(--site-text) 60%, transparent);
+  --ink-soft: var(--site-text-2);
+  --ink-faint: var(--site-text-3);
 }
 
 /* Cards sit one step above the canvas, like Cursor's elevated tiles. */
@@ -8652,22 +8834,46 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
   --md-sys-shape-corner-extra-large: 12px;
 }
 
-/* Sidebar: elevated tone with a hairline edge. The global `html.dark aside`
-   rule paints asides from --google-surface, so the tone goes through it. */
+/* Sidebar sits on the canvas with no edge; the content floats beside it in
+   a white panel. The global `html.dark aside` rule paints asides from
+   --google-surface, so the tone goes through it. */
 :root .dashboard-shell > aside {
-  --google-surface: var(--site-sidebar, var(--site-card));
+  --google-surface: var(--site-sidebar, var(--site-bg));
   background-color: var(--google-surface);
-  border-right: 1px solid var(--site-border);
+  border-right: 0;
 }
 
-/* Controls are 6px rectangles in the app, not the site's pills. Same
+:root .dashboard-shell {
+  background-color: var(--site-bg);
+}
+
+@media (min-width: 768px) {
+  :root .dashboard-shell > main {
+    padding: 8px 8px 8px 0;
+  }
+
+  :root .dashboard-shell > main > section {
+    overflow: hidden;
+    border-radius: 16px;
+    background-color: var(--site-card);
+  }
+}
+
+/* Page titles in the display face, like the reference's 18px headers. */
+:root:has(.dashboard-shell) .dashboard-shell main h1 {
+  font-family: var(--font-cal-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Controls have 12px corners in the app, not the site's pills. Same
    selector list as the pill rule, one :has() stronger. */
 :root:has(.dashboard-shell) {
-  --md-sys-text-field-radius: 6px;
+  --md-sys-text-field-radius: 12px;
 }
 
 :root:has(.dashboard-shell) :is(.dashboard-shell, .m3-text-field--compact) {
-  --md-sys-text-field-radius: 6px;
+  --md-sys-text-field-radius: 12px;
 }
 
 :root:has(.dashboard-shell) .m3-btn,
@@ -8682,7 +8888,7 @@ html.dark #ph-conversations-widget-container textarea:focus-visible,
 :root:has(.dashboard-shell) .m3-text-field__shell,
 :root:has(.dashboard-shell) textarea,
 :root:has(.dashboard-shell) .m3-text-field__shell:has(textarea) {
-  border-radius: 6px !important;
+  border-radius: 12px !important;
 }
 
 /* Rounded-full chips, avatars and toggles stay round. */
@@ -8759,4 +8965,3542 @@ body.app-compact:has(.dashboard-shell) .m3-text-field--textarea .m3-text-field__
 /* Cursor's fields have no fill; the global `html.dark input` rule paints one. */
 html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), textarea, select) {
   background-color: transparent !important;
+}
+
+/* ── Marketing theme (Calendly-style layout) ───────────────────────────────
+   While a marketing page is mounted (MarketingHeader renders `.cal-site`),
+   the site palette on :root is swapped for navy ink on warm cream (light)
+   or cream ink on deep navy (dark). Setting it on :root lets every derived
+   --google-* / --md-sys-* role, portals and the product mocks recompute from
+   it. The logged-in app never renders the marker, so it keeps the olive
+   site theme. `.cal-*` section classes are the homepage's; the shared rules
+   (buttons, header, menus, reveals, footer, type) apply to every
+   marketing page. */
+:root:has(.cal-site) {
+  --site-bg: #06121f;
+  --site-card: #0c1b2e;
+  --site-card-2: #112338;
+  --site-card-3: #172b43;
+  --site-card-4: #1d334d;
+  --site-text: #eef3f8;
+  --site-accent: #7db4ff;
+  --cal-surface: #0e1f33;
+  --cal-ring: #1b3048;
+  --cal-hero: #0a1829;
+  --cal-footer: #040d18;
+  --cal-footer-ink: #eef3f8;
+  --cal-blue: #4d9bff;
+  --cal-blue-soft: color-mix(in oklab, #4d9bff 18%, transparent);
+  --cal-grad-a: color-mix(in oklab, #2f7de0 55%, #06121f);
+  --cal-grad-b: color-mix(in oklab, #7b5ce0 45%, #06121f);
+  --cal-grad-c: color-mix(in oklab, #2fa89a 40%, #06121f);
+  --cal-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.3);
+  --cal-muted: #9aa7b4;
+  --cal-art-light: #1a2d45;
+  --cal-art-blue: #2b4f7a;
+  --cal-art-mint: #22595a;
+  --cal-art-lavender: #43407a;
+  --cal-art-lime: #3f5a3a;
+  --cal-art-peach: #5a4636;
+  /* TopicArt shapes: a soft light highlight into a brighter tint, so they
+     lift off the dark pastel grounds above. */
+  --cal-art-glow: #c9d7ea;
+  --cal-art-blue-deep: #6ea2ec;
+  --cal-art-mint-deep: #58c0aa;
+  --cal-art-lavender-deep: #a397f0;
+  --cal-art-lime-deep: #9cc47c;
+  --cal-art-peach-deep: #e0a574;
+  --cal-primary-hover: #d6e2ef;
+  --cal-hover: #16283f;
+  --cal-menu-shadow: 0 4px 5px rgb(0 0 0 / 0.2), 0 10px 15px rgb(0 0 0 / 0.2), 0 40px 50px rgb(0 0 0 / 0.35);
+}
+
+:root[data-site-theme="light"]:has(.cal-site) {
+  --site-bg: #fcfbf8;
+  --site-card: #ffffff;
+  --site-card-2: #f0ede7;
+  --site-card-3: #eae7e0;
+  --site-card-4: #e4e1d9;
+  --site-text: #071a31;
+  --site-accent: #006bff;
+  --cal-surface: #ffffff;
+  --cal-ring: #ffffff;
+  --cal-hero: #f4f2ec;
+  --cal-footer: #071a31;
+  --cal-footer-ink: #fcfbf8;
+  --cal-blue: #006bff;
+  --cal-blue-soft: #e6f0ff;
+  --cal-grad-a: #84c1ff;
+  --cal-grad-b: #c9b8ff;
+  --cal-grad-c: #a6e6d8;
+  --cal-shadow: 0 1px 2px rgb(7 26 49 / 0.06), 0 12px 32px rgb(7 26 49 / 0.08);
+  --cal-muted: #5f6d77;
+  --cal-art-light: #ffffff;
+  --cal-art-blue: #d6e8ff;
+  --cal-art-mint: #d3f1ea;
+  --cal-art-lavender: #e4dcfb;
+  --cal-art-lime: #e8f2cf;
+  --cal-art-peach: #fbe3cc;
+  --cal-art-glow: #ffffff;
+  --cal-art-blue-deep: #84b8f5;
+  --cal-art-mint-deep: #7fd4c1;
+  --cal-art-lavender-deep: #b4a3f0;
+  --cal-art-lime-deep: #bcd98a;
+  --cal-art-peach-deep: #f3b98a;
+  --cal-primary-hover: #0e396a;
+  --cal-hover: #f5f3ee;
+  --cal-menu-shadow: 0 4px 5px rgb(95 109 119 / 0.04), 0 10px 15px rgb(95 109 119 / 0.04), 0 40px 50px rgb(95 109 119 / 0.1);
+}
+
+:root:has(.cal-site) .site-btn {
+  border-radius: 16px;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover shifts the fill instead of dimming it. */
+:root:has(.cal-site) .site-btn-primary:hover {
+  opacity: 1;
+  background-color: var(--cal-primary-hover);
+  border-color: var(--cal-primary-hover);
+}
+
+:root:has(.cal-site) .site-btn-outline {
+  border-color: var(--site-text);
+}
+
+:root:has(.cal-site) .site-btn-outline:hover {
+  background-color: var(--cal-hover);
+}
+
+/* Floating header card instead of a full-width bar. */
+.cal-header > div {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.cal-header header {
+  height: 64px;
+  margin-top: 12px;
+  width: calc(100% - 2 * var(--omentir-page-pad-x));
+  max-width: calc(var(--omentir-primary-max-width) - 2 * var(--omentir-page-pad-x-md));
+  padding-inline: 16px;
+  border-radius: 20px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-menu-shadow);
+  transition: background-color 250ms ease, box-shadow 250ms ease, margin-top 250ms ease;
+}
+
+/* At the very top the bar sits flat on the hero, like the reference; the
+   frame gets `bg-transparent` from MarketingHeaderFrame until you scroll. */
+.cal-header > div[class~="bg-transparent"] header {
+  margin-top: 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cal-header .site-btn-sm {
+  height: 2.75rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+}
+
+.cal-header :is(.site-nav-link, .nav-menu-trigger, nav .group > button) {
+  padding: 0.5rem 0.625rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-header :is(.site-nav-link, .nav-menu-trigger, nav .group > button):hover,
+.cal-header nav .group:is(:hover, :focus-within) > button {
+  background-color: var(--cal-hover);
+}
+
+/* Type scale: medium weight, tight tracking, navy ink. */
+:root:has(.cal-site) .cal-h1 {
+  max-width: 56rem;
+  margin-inline: auto;
+  font-family: var(--font-cal-display);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+
+:root:has(.cal-site) .cal-h2-xl {
+  max-width: 48rem;
+  font-family: var(--font-cal-display);
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.024em;
+  text-wrap: balance;
+}
+
+:root:has(.cal-site) .cal-h2-lg {
+  margin-top: 1rem;
+  font-family: var(--font-cal-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.cal-lead {
+  max-width: 40rem;
+  margin-top: 1.25rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--cal-muted);
+}
+
+.cal-muted {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--cal-muted);
+}
+
+.cal-eyebrow {
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cal-muted);
+}
+
+.cal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-cal-display);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.cal-chip {
+  gap: 0.5rem;
+}
+
+.cal-underline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid currentColor;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: opacity 150ms ease;
+}
+
+.cal-intro .cal-underline-link {
+  align-self: center;
+}
+
+.cal-underline-link:hover {
+  opacity: 0.7;
+}
+
+.cal-section {
+  padding-block: 5rem;
+}
+
+@media (min-width: 768px) {
+  .cal-section {
+    padding-block: 7.5rem;
+  }
+}
+
+.cal-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Hero: cream panel inset from the viewport edges. */
+.cal-hero {
+  margin: 0 8px;
+  padding: 8.5rem 16px 16px;
+  border-radius: 28px;
+  background: var(--cal-hero);
+}
+
+@media (min-width: 768px) {
+  .cal-hero {
+    margin: 0 12px;
+    padding: 10rem 32px 32px;
+    border-radius: 32px;
+  }
+}
+
+.cal-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cal-hero-cta > div {
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* Product stage: gradient field, icon tabs, white card. The gradient is one
+   layer per tab so it can crossfade with the card. */
+.cal-stage {
+  position: relative;
+  isolation: isolate;
+  max-width: 76rem;
+  margin: 3.5rem auto 0;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--cal-blue-soft);
+}
+
+@media (min-width: 768px) {
+  .cal-stage {
+    margin-top: 4.5rem;
+    border-radius: 32px;
+  }
+}
+
+.cal-stage-track {
+  scroll-margin-top: 6rem;
+}
+
+.cal-stage-inner {
+  position: relative;
+  width: 100%;
+  padding: 1.25rem 12px 12px;
+}
+
+@media (min-width: 768px) {
+  .cal-stage-inner {
+    padding: 2rem 3rem 3rem;
+  }
+}
+
+.cal-stage-back {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background:
+    radial-gradient(60% 70% at 10% 20%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(50% 60% at 90% 30%, var(--cal-grad-b), transparent 70%),
+    radial-gradient(60% 60% at 50% 100%, var(--cal-grad-c), transparent 70%);
+}
+
+.cal-stage-back.is-steal {
+  background:
+    radial-gradient(70% 70% at 15% 80%, var(--cal-grad-c), transparent 70%),
+    radial-gradient(60% 60% at 85% 15%, var(--cal-grad-a), transparent 70%);
+}
+
+.cal-stage-back.is-message {
+  background:
+    radial-gradient(70% 70% at 85% 70%, var(--cal-grad-b), transparent 70%),
+    radial-gradient(60% 60% at 10% 10%, var(--cal-grad-a), transparent 70%);
+}
+
+.cal-stage-back.is-inbox {
+  background:
+    radial-gradient(70% 70% at 50% 0%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(60% 60% at 90% 100%, var(--cal-grad-c), transparent 70%),
+    radial-gradient(50% 50% at 0% 100%, var(--cal-grad-b), transparent 70%);
+}
+
+.cal-stage-back.is-on {
+  opacity: 1;
+}
+
+/* Scroll-driven mode (large screens, motion allowed): the track is tall, the
+   pin sticks for its length, and JS sizes the stage and fades the layers. */
+.cal-stage-track.is-scrub {
+  height: calc(100vh + 560px + 4 * 70vh);
+  /* The pin centers a ~608px stage in 100vh; pull the track up by the empty
+     band above it so the resting stage sits 3.5rem under the hero copy. */
+  margin-top: calc(3.5rem - (100vh - 608px) / 2);
+}
+
+.is-scrub .cal-stage-pin {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.is-scrub .cal-stage {
+  pointer-events: auto;
+}
+
+.is-scrub .cal-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.is-scrub .cal-stage-inner {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+/* A shorter resting card, so the stage visibly grows in height too. */
+.is-scrub .cal-tab-draw {
+  height: 24rem;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 82%, transparent);
+}
+
+.is-scrub :is(.cal-stage-back, .cal-tab-card) {
+  transition: none;
+}
+
+.cal-header {
+  transition: opacity 200ms ease;
+}
+
+:root[data-cal-immersive] .cal-header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cal-tab-cards {
+  display: grid;
+}
+
+/* The chat mock contains its own overscroll, which would trap the page's
+   wheel scroll while the stage is pinned under the cursor. */
+.cal-stage .home-mock-log {
+  overscroll-behavior: auto;
+}
+
+
+.cal-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.cal-tab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-tab:hover {
+  transform: translateY(-1px);
+}
+
+/* The active tile hangs a small tail toward the card below it. */
+.cal-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--cal-ring);
+  transform: translateX(-50%) rotate(45deg);
+  z-index: -1;
+}
+
+.cal-tab-card {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.cal-tab-card.is-on {
+  opacity: 1;
+}
+
+@media (min-width: 1024px) {
+  .cal-tab-card {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 3rem;
+    padding: 2.5rem;
+    border-radius: 24px;
+  }
+}
+
+.cal-tab-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+:root:has(.cal-site) .cal-tab-copy h2 {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.cal-tab-draw {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--cal-blue-soft);
+}
+
+@keyframes cal-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Step cards: the active one widens and reveals its list and demo. */
+.cal-steps {
+  display: grid;
+  gap: 12px;
+  margin-top: 4rem;
+}
+
+.cal-step {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  outline: none;
+  transition: flex-grow 500ms ease-in-out, box-shadow 180ms ease-in-out;
+}
+
+/* Active gradient, faded in behind the demo when a card opens. A layer, so
+   it can crossfade (gradients themselves do not transition). */
+.cal-step::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 500ms ease-in-out;
+  background:
+    radial-gradient(90% 55% at 25% 110%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(70% 50% at 100% 100%, var(--cal-grad-c), transparent 70%),
+    radial-gradient(60% 40% at 0% 100%, var(--cal-grad-b), transparent 70%);
+}
+
+.cal-step-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Title + body, then a clear break before the list, so the card reads as
+   two groups instead of one run of text. */
+.cal-step-head .cal-step-items {
+  margin-top: 0.75rem;
+}
+
+/* Resting-card artwork: pastel shapes in the lower half that fade out as
+   the card opens. Wide screens only; stacked cards are always open. */
+.cal-step-art {
+  display: none;
+}
+
+.cal-step-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+:root:has(.cal-site) .cal-step h3 {
+  font-family: var(--font-cal-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.cal-step-items {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.cal-step-items li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Timeline: squircle bullets joined by a hairline. */
+.cal-step-items {
+  gap: 0.875rem;
+}
+
+.cal-step-items li {
+  position: relative;
+  gap: 0.625rem;
+}
+
+.cal-step-items li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 24px;
+  left: 10.5px;
+  width: 1px;
+  height: calc(100% - 10px);
+  background: color-mix(in oklab, var(--site-text) 14%, transparent);
+}
+
+.cal-step-demo {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .cal-steps {
+    display: flex;
+    min-height: 32rem;
+  }
+
+  .cal-step {
+    flex: 1 1 0;
+  }
+
+  .cal-step-art {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: -1;
+    display: block;
+    height: 58%;
+    pointer-events: none;
+    mask-image: linear-gradient(to top, #000 60%, transparent);
+    transition: opacity 400ms ease-in-out, transform 500ms ease-in-out;
+  }
+
+  /* List and demo stay out of flow: in flow they would set the row height
+     at the narrow closed width (where they wrap tallest), leaving a hole in
+     the open card and making the row jump while a card widens. The list
+     hangs off the bottom of the head (title + body); the demo is pinned to
+     the card's bottom. Closing hides them at once. */
+  .cal-step-head {
+    position: relative;
+  }
+
+  .cal-step-items,
+  .cal-step-demo {
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .cal-step-items {
+    /* Plus the 0.75rem margin-top from .cal-step-head .cal-step-items. */
+    top: calc(100% + 1rem);
+    inset-inline: 0;
+  }
+
+  .cal-step-demo {
+    bottom: 1.5rem;
+    inset-inline: 1.5rem;
+  }
+
+  .cal-step:hover,
+  .cal-step:focus-within,
+  .cal-steps:not(:hover):not(:focus-within) .cal-step:first-child {
+    flex-grow: 2.2;
+  }
+
+  .cal-step:hover::before,
+  .cal-step:focus-within::before,
+  .cal-steps:not(:hover):not(:focus-within) .cal-step:first-child::before {
+    opacity: 1;
+  }
+
+  .cal-step:hover .cal-step-art,
+  .cal-step:focus-within .cal-step-art,
+  .cal-steps:not(:hover):not(:focus-within) .cal-step:first-child .cal-step-art {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .cal-step:hover :is(.cal-step-items, .cal-step-demo),
+  .cal-step:focus-within :is(.cal-step-items, .cal-step-demo),
+  .cal-steps:not(:hover):not(:focus-within) .cal-step:first-child :is(.cal-step-items, .cal-step-demo) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 250ms ease 150ms, visibility 0s 150ms;
+  }
+}
+
+/* Small illustrative UI cards used in steps and the feature panel. */
+/* Small demo cards sit in a frosted ring, like a device bezel. */
+.cal-mini,
+.cal-float-card {
+  padding: 1rem;
+  border: 0;
+  border-radius: 16px;
+  background: var(--cal-surface);
+  box-shadow:
+    0 0 0 8px color-mix(in oklab, var(--cal-ring) 55%, transparent),
+    0 0 0 9px color-mix(in oklab, var(--site-text) 6%, transparent),
+    var(--cal-shadow);
+  font-size: 0.8125rem;
+}
+
+.cal-mini-label,
+.cal-float-kicker {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--site-text-2);
+}
+
+.cal-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.cal-mini-row strong,
+.cal-mini-row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-mini-row strong {
+  font-weight: 500;
+}
+
+.cal-mini-row small {
+  color: var(--site-text-2);
+}
+
+.cal-mini-face {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cal-mini-pill {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+  font-weight: 500;
+}
+
+.cal-mini-meter,
+.cal-float-meter span {
+  display: block;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--site-card-3);
+}
+
+.cal-mini-meter span,
+.cal-float-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cal-blue);
+}
+
+.cal-mini-note {
+  margin-top: 0.5rem;
+  color: var(--site-text-2);
+}
+
+.cal-mini-list {
+  display: grid;
+  gap: 0.625rem;
+}
+
+/* Hairline between a demo's main block and its follow-on rows. */
+.cal-mini-divided {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in oklab, var(--site-text) 10%, transparent);
+}
+
+.cal-mini-bubble {
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px 12px 12px 4px;
+  background: var(--cal-blue-soft);
+  line-height: 1.4;
+}
+
+.cal-mini-bubble.is-in {
+  border-radius: 12px 12px 4px 12px;
+  background: var(--site-card-2);
+}
+
+.cal-mini-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+}
+
+.cal-mini-slots span {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--cal-blue);
+  border-radius: 8px;
+  color: var(--cal-blue);
+  font-weight: 500;
+}
+
+/* Feature accordion + sticky demo panel. */
+.cal-split {
+  display: grid;
+  gap: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .cal-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: start;
+    gap: 5rem;
+  }
+}
+
+.cal-accordion {
+  margin-top: 2.5rem;
+  border-bottom: 1px solid var(--site-border);
+}
+
+.cal-accordion > li {
+  border-top: 1px solid var(--site-border);
+}
+
+.cal-accordion-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1.25rem 0;
+  text-align: left;
+  font-family: var(--font-cal-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--cal-muted);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.cal-accordion > li.is-open .cal-accordion-head,
+.cal-accordion-head:hover {
+  color: var(--site-text);
+}
+
+
+
+.cal-accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 0 1.5rem 2rem;
+  animation: cal-fade 250ms ease both;
+}
+
+.cal-float-stage {
+  display: grid;
+  place-items: center;
+  min-height: 22rem;
+  padding: 2rem;
+  border-radius: 32px;
+  background:
+    radial-gradient(70% 60% at 20% 10%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(60% 60% at 90% 90%, var(--cal-grad-b), transparent 70%),
+    radial-gradient(50% 50% at 10% 100%, var(--cal-grad-c), transparent 70%),
+    var(--cal-blue-soft);
+}
+
+@media (min-width: 1024px) {
+  .cal-float-stage {
+    position: sticky;
+    top: 6rem;
+    min-height: 34rem;
+  }
+}
+
+.cal-float-card {
+  width: min(100%, 22rem);
+  padding: 1.5rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  animation: cal-fade 300ms ease both;
+}
+
+.cal-float-title {
+  font-size: 1.375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.cal-float-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.cal-float-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: var(--site-card);
+}
+
+.cal-float-list em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--cal-blue);
+}
+
+.cal-float-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  color: var(--site-text-2);
+}
+
+.cal-switch {
+  position: relative;
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: var(--cal-blue);
+}
+
+.cal-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: var(--cal-surface);
+}
+
+.cal-float-meter {
+  display: grid;
+  grid-template-columns: 5rem 1fr 3rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.cal-float-ok {
+  margin-top: 1rem;
+  color: var(--tone-green);
+  font-weight: 500;
+}
+
+.cal-float-code {
+  margin: 1rem 0 0.25rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8125rem;
+  color: var(--site-text-2);
+}
+
+/* Scroll-driven mode: the list pins for its track and scroll picks the
+   open item (see HomeFeatureAccordion). */
+.cal-feature-track.is-scrub {
+  height: calc(100vh + 6 * 45vh);
+}
+
+/* Pinned under the floating header (64px + 12px top margin), not behind
+   it: at top 0 the chip and heading scroll under the header. */
+.is-scrub > .cal-split {
+  position: sticky;
+  top: 5.5rem;
+  align-items: center;
+  height: calc(100vh - 5.5rem);
+}
+
+/* While pinned only three items show (HomeFeatureAccordion marks the rest
+   .is-far); rows collapse via grid rows so height animates exactly. */
+.is-scrub .cal-accordion > li {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 400ms cubic-bezier(0.2, 0, 0, 1), opacity 300ms ease, border-color 300ms ease;
+}
+
+.is-scrub .cal-accordion-item {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.is-scrub .cal-accordion > li.is-far {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  border-top-color: transparent;
+}
+
+.is-scrub .cal-float-stage {
+  position: static;
+}
+
+/* Inner marketing pages (blogs, help, features, guides, SEO pages): the
+   homepage's cream hero panel on top, then one centered reading column,
+   card lists and a rounded closing panel. See CalPageHero and friends in
+   marketing-shell.tsx. */
+.cal-page-hero {
+  padding-bottom: 3rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .cal-page-hero {
+    padding-bottom: 4.5rem;
+  }
+}
+
+.cal-page-hero-plain {
+  padding-bottom: 0;
+  background: transparent;
+}
+
+@media (min-width: 768px) {
+  .cal-page-hero-plain {
+    padding-bottom: 0;
+  }
+}
+
+.cal-page-hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.cal-page-hero .cal-lead {
+  margin-inline: auto;
+}
+
+.cal-page-title {
+  font-family: var(--font-cal-display);
+  font-size: clamp(2.125rem, 5vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+  color: var(--site-text);
+}
+
+.cal-page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--cal-muted);
+}
+
+/* .app-compact (on <body>, for the logged-in app) shrinks Tailwind's text
+   scale everywhere, so text-base renders at 13px. Inner marketing pages
+   read at the normal scale: revert-layer hands size and line height back
+   to the Tailwind utilities (including any leading-* on the element). */
+:root .app-compact :is(.cal-read, .cal-page-hero, .cal-post-layout, .cal-side-layout) :is(.text-xs, .text-sm, .text-base, .text-lg, .text-\[13px\], .text-\[14px\], .text-\[15px\], .text-\[16px\]) {
+  font-size: revert-layer;
+  line-height: revert-layer;
+}
+
+:root:has(.cal-site) .blog-article :is(h2, h3) {
+  margin-top: 3rem;
+  font-family: var(--font-cal-display);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--site-text);
+}
+
+:root:has(.cal-site) .blog-article h2 {
+  font-size: 1.75rem;
+}
+
+:root:has(.cal-site) .blog-article h3 {
+  font-size: 1.25rem;
+}
+
+.cal-read {
+  width: calc(100% - 2 * var(--omentir-page-pad-x));
+  max-width: 44rem;
+  margin-inline: auto;
+  padding-block: 3.5rem 5rem;
+}
+
+.cal-read-wide {
+  max-width: calc(var(--omentir-primary-max-width) - 2 * var(--omentir-page-pad-x-md));
+}
+
+.cal-read-moderate {
+  max-width: 64rem;
+}
+
+@media (min-width: 768px) {
+  .cal-read {
+    padding-block: 4.5rem 7rem;
+  }
+}
+
+.cal-read-h2 {
+  font-family: var(--font-cal-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--site-text);
+}
+
+@media (min-width: 768px) {
+  .cal-read-h2 {
+    font-size: 2rem;
+  }
+}
+
+.cal-link-cards {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .cal-link-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cal-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  border-radius: 20px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.cal-link-card:hover {
+  background: var(--cal-hover);
+  transform: translateY(-2px);
+}
+
+.cal-link-card strong {
+  display: block;
+  font-weight: 500;
+}
+
+.cal-link-card small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--cal-muted);
+}
+
+.cal-link-card-arrow {
+  flex-shrink: 0;
+  color: var(--cal-blue);
+}
+
+.cal-cta-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4rem;
+  padding: 2.5rem 1.5rem;
+  border-radius: 28px;
+  background: var(--cal-hero);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .cal-cta-panel {
+    padding: 3.5rem 3rem;
+  }
+}
+
+.cal-cta-panel .cal-lead {
+  margin-top: 0.75rem;
+}
+
+/* Blog post (calendly.com/blog layout): sticky sidebar with contents,
+   a sign-up card and share buttons beside the article. */
+.cal-post-tag-link {
+  display: inline-flex;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  transition: opacity 150ms ease;
+}
+
+.cal-post-tag-link:hover {
+  opacity: 0.8;
+}
+
+.cal-post-layout {
+  display: grid;
+  gap: 2rem;
+  width: calc(100% - 2 * var(--omentir-page-pad-x));
+  max-width: calc(var(--omentir-primary-max-width) - 2 * var(--omentir-page-pad-x-md));
+  margin-inline: auto;
+  padding-block: 3rem 5rem;
+}
+
+.cal-post-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cal-toc {
+  padding: 1.25rem 1.5rem;
+  border-radius: 20px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+}
+
+.cal-toc summary {
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cal-toc ol {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.cal-toc a {
+  color: var(--cal-muted);
+  transition: color 150ms ease;
+}
+
+.cal-toc a:hover {
+  color: var(--site-text);
+}
+
+.cal-side-cta,
+.cal-share {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .cal-post-layout {
+    grid-template-columns: 17rem minmax(0, 44rem);
+    justify-content: center;
+    gap: 4.5rem;
+    padding-block: 4.5rem 7rem;
+  }
+
+  .cal-post-aside {
+    position: sticky;
+    top: 6.5rem;
+    align-self: start;
+  }
+
+  .cal-side-cta {
+    display: block;
+    padding: 1.5rem;
+    border-radius: 20px;
+    background: var(--cal-hero);
+  }
+
+  .cal-side-cta p {
+    font-family: var(--font-cal-display);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .cal-share {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cal-share a {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    background: var(--cal-surface);
+    box-shadow: var(--cal-shadow);
+    color: var(--site-text);
+    transition: background-color 150ms ease;
+  }
+
+  .cal-share a:hover {
+    background: var(--cal-hover);
+  }
+}
+
+/* Blog index: category pills and post cards (BlogsTable). */
+.cal-filter-pill {
+  padding: 0.5rem 0.875rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cal-muted);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.cal-filter-pill:hover {
+  background: var(--cal-hover);
+  color: var(--site-text);
+}
+
+.cal-filter-pill:is([aria-pressed="true"], [aria-current="page"]) {
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+}
+
+.cal-post-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.cal-post-grid {
+  row-gap: 3rem;
+  column-gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .cal-post-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-post-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Post cards (BlogCard): image first, text straight on the page, no card
+   surface, the way calendly.com/blog lays them out. */
+.cal-post-card,
+.cal-post-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: var(--site-text);
+}
+
+.cal-post-img {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  /* Category tiles are colour accents, not pictures: kept short. */
+  aspect-ratio: 2 / 1;
+  border-radius: 16px;
+  background: var(--cal-hero);
+}
+
+.cal-post-img img {
+  transition: transform 400ms ease;
+}
+
+:is(.cal-post-card, .cal-post-featured):hover .cal-post-img img {
+  transform: scale(1.03);
+}
+
+.cal-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.cal-post-card strong {
+  font-family: var(--font-cal-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.cal-post-featured-wrap {
+  margin-top: 2.5rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid var(--site-border);
+}
+
+.cal-post-featured strong {
+  font-family: var(--font-cal-serif);
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.cal-post-featured .cal-post-summary {
+  -webkit-line-clamp: 3;
+  font-size: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .cal-post-featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 3rem;
+  }
+
+  .cal-post-featured .cal-post-img {
+    aspect-ratio: 16 / 10;
+    border-radius: 24px;
+  }
+}
+
+.cal-post-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--cal-muted);
+}
+
+.cal-post-tag {
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+  font-weight: 500;
+}
+
+.cal-post-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--cal-muted);
+}
+
+/* Customer results. */
+.cal-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .cal-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.cal-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 16rem;
+  padding: 2rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(90% 80% at 0% 0%, var(--cal-grad-a), transparent 70%),
+    var(--cal-surface);
+}
+
+.cal-result:nth-child(2) {
+  background:
+    radial-gradient(90% 80% at 100% 0%, var(--cal-grad-b), transparent 70%),
+    var(--cal-surface);
+}
+
+.cal-result:nth-child(3) {
+  background:
+    radial-gradient(90% 80% at 50% 100%, var(--cal-grad-c), transparent 70%),
+    var(--cal-surface);
+}
+
+.cal-result-value {
+  font-family: var(--font-cal-display);
+  font-size: clamp(3rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.cal-result-label {
+  margin-top: auto;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+/* Integrations. */
+.cal-logo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  max-width: 52rem;
+  margin: 3.5rem auto 0;
+}
+
+.cal-logo-tile {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 18px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  transition: transform 150ms ease;
+}
+
+.cal-logo-tile:hover {
+  transform: translateY(-2px);
+}
+
+.cal-logo-tile > span {
+  border: 0;
+  background: transparent;
+}
+
+/* Brand-colored mark (HomeIntegrations): the logo file is the mask, the
+   inline background color is the brand's. */
+.cal-brand-mark {
+  width: 100%;
+  height: 100%;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.cal-integration-cards {
+  display: grid;
+  gap: 12px;
+  margin-top: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .cal-integration-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 2rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+}
+
+:root:has(.cal-site) .cal-card h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Closing marquee. */
+.cal-closing {
+  overflow: hidden;
+}
+
+.cal-marquee {
+  margin-top: 4rem;
+  overflow: hidden;
+}
+
+.cal-marquee-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  animation: cal-marquee 96s linear infinite;
+}
+
+.cal-moment {
+  position: relative;
+  width: 17rem;
+  height: 21rem;
+  flex-shrink: 0;
+  border-radius: 28px;
+  background:
+    radial-gradient(80% 70% at 20% 20%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(70% 70% at 90% 90%, var(--cal-grad-c), transparent 70%),
+    var(--cal-blue-soft);
+  overflow: hidden;
+}
+
+.cal-moment-img {
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .cal-moment {
+    width: 22rem;
+    height: 27rem;
+  }
+}
+
+.cal-moment-2 {
+  background:
+    radial-gradient(80% 70% at 80% 20%, var(--cal-grad-b), transparent 70%),
+    radial-gradient(70% 70% at 10% 90%, var(--cal-grad-a), transparent 70%),
+    var(--cal-blue-soft);
+}
+
+.cal-moment-3 {
+  background:
+    radial-gradient(80% 70% at 50% 10%, var(--cal-grad-c), transparent 70%),
+    radial-gradient(70% 70% at 90% 90%, var(--cal-grad-b), transparent 70%),
+    var(--cal-blue-soft);
+}
+
+.cal-moment-pill {
+  position: absolute;
+  z-index: 1;
+  bottom: 1.5rem;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 2.5rem);
+  padding: 0.875rem 1.25rem;
+  border-radius: 14px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+@keyframes cal-marquee {
+  to { transform: translateX(calc(-50% - 10px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-marquee-track,
+  .cal-float-card,
+  .cal-accordion-body {
+    animation: none;
+  }
+}
+
+
+/* Header menus on the homepage: white panel, large soft shadow, tinted icon
+   tiles, and a short fade-down instead of a scale. */
+:root:has(.cal-site) .nav-menu-panel {
+  border: 0;
+  border-radius: 32px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-menu-shadow);
+  scale: 1;
+  translate: 0 -6px;
+  transition: translate 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root:has(.cal-site) .nav-menu:is(:hover, :focus-within) .nav-menu-panel {
+  translate: 0 0;
+}
+
+:root:has(.cal-site) .nav-menu-panel > div {
+  padding: 1.5rem;
+}
+
+:root:has(.cal-site) .nav-menu-eyebrow {
+  color: var(--cal-muted);
+}
+
+:root:has(.cal-site) .nav-menu-item {
+  padding: 0.5rem;
+  border-radius: 24px;
+}
+
+:root:has(.cal-site) :is(.nav-menu-item, .nav-menu-link):hover {
+  background-color: var(--cal-hover);
+}
+
+:root:has(.cal-site) .nav-menu-title {
+  font-size: 1rem;
+}
+
+:root:has(.cal-site) .nav-menu-note {
+  color: var(--cal-muted);
+}
+
+:root:has(.cal-site) .nav-menu-side {
+  display: flex;
+  flex-direction: column;
+  min-width: 15.5rem;
+  border-left: 0;
+  background: color-mix(in oklab, var(--site-text) 3%, var(--cal-surface));
+}
+
+/* Platform list: quieter than the main features. Small grey glyphs, 14px
+   labels in a softer ink, tight rows, white hover chip on the tinted side. */
+:root:has(.cal-site) .nav-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  color: color-mix(in oklab, var(--site-text) 82%, transparent);
+}
+
+:root:has(.cal-site) .nav-menu-link svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--cal-muted);
+}
+
+:root:has(.cal-site) .nav-menu-side .nav-menu-link:hover {
+  background-color: var(--cal-surface);
+  color: var(--site-text);
+}
+
+:root:has(.cal-site) .nav-menu-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding: 0.75rem 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--site-text);
+  transition: opacity 150ms ease;
+}
+
+:root:has(.cal-site) .nav-menu-all:hover {
+  opacity: 0.7;
+}
+
+/* TopicArt: minimal illustration on a square pastel card. */
+.cal-art {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 24px;
+  background: var(--art-ground, var(--cal-art-blue));
+}
+
+.cal-art[data-ground="mint"] { --art-ground: var(--cal-art-mint); }
+.cal-art[data-ground="lavender"] { --art-ground: var(--cal-art-lavender); }
+.cal-art[data-ground="lime"] { --art-ground: var(--cal-art-lime); }
+.cal-art[data-ground="peach"] { --art-ground: var(--cal-art-peach); }
+
+.cal-art svg {
+  width: 74%;
+  height: 74%;
+}
+
+.cal-art.is-sm {
+  width: 5.5rem;
+  border-radius: 20px;
+}
+
+.cal-art.is-md {
+  width: 8.5rem;
+  border-radius: 26px;
+}
+
+.cal-art.is-lg {
+  width: min(100%, 24rem);
+  border-radius: 36px;
+}
+
+.cal-art.is-fill {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+/* Blog cards: a TopicArt tile in place of the banner image. */
+
+.cal-post-tile {
+  transition: transform 400ms ease;
+}
+
+/* Phones: a compact list, small square tile beside the text, so each post
+   is a row instead of a screen-tall block. */
+@media (max-width: 639px) {
+  .cal-post-card {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .cal-post-card .cal-post-img {
+    width: 5rem;
+    flex-shrink: 0;
+    aspect-ratio: 1;
+    border-radius: 14px;
+  }
+
+  .cal-post-card strong {
+    font-size: 1.0625rem;
+  }
+
+  .cal-post-grid {
+    row-gap: 1.75rem;
+  }
+}
+
+:is(.cal-post-card, .cal-post-featured):hover .cal-post-tile {
+  transform: scale(1.03);
+}
+
+/* Feature pages (FeaturePageView): the sections as a bento of lead block, numbered cards, a first-week band
+   and a caution card. */
+.cal-bento-lead {
+  display: grid;
+  gap: 1.25rem;
+  padding: 2rem;
+  border-radius: 28px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+}
+
+@media (min-width: 1024px) {
+  .cal-bento-lead {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 3rem;
+    padding: 3rem;
+  }
+}
+
+.cal-bento-lead-body {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--site-text);
+}
+
+/* Section gist: the first sentence, set larger in full ink, so skimming
+   the headings and gists gives the whole page. */
+.cal-gist {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--site-text);
+}
+
+.cal-gist.is-lead {
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.cal-gist .cal-checklist {
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+}
+
+.cal-more {
+  margin-top: 0.75rem;
+}
+
+.cal-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cal-blue);
+}
+
+.cal-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cal-more > summary::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: -0.2rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.cal-more[open] > summary::after {
+  margin-top: 0.2rem;
+  transform: rotate(-135deg);
+}
+
+/* Masonry via columns: cards keep their own height (a grid row would
+   stretch a short card into an empty box next to a long one). */
+.cal-bento {
+  column-gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .cal-bento {
+    columns: 2;
+  }
+}
+
+.cal-bento > .cal-bento-card {
+  margin-bottom: 1.5rem;
+  break-inside: avoid;
+}
+
+.cal-bento-card {
+  padding: 1.75rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+}
+
+.cal-bento-card h2 {
+  margin-top: 1rem;
+  font-family: var(--font-cal-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.cal-bento-num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.5rem;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border-radius: 10px;
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+  font-family: var(--font-cal-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-bento-card.is-caution {
+  background: color-mix(in oklab, #f5a524 10%, var(--cal-surface));
+  box-shadow: none;
+  border: 1px solid color-mix(in oklab, #f5a524 35%, transparent);
+}
+
+.cal-bento-card.is-caution .cal-bento-num {
+  background: color-mix(in oklab, #f5a524 22%, transparent);
+  color: color-mix(in oklab, #b36b00 80%, var(--site-text));
+}
+
+.cal-bento-band {
+  display: grid;
+  gap: 1.25rem;
+  padding: 2rem;
+  border-radius: 28px;
+  background: var(--cal-blue-soft);
+  color: var(--site-text);
+}
+
+@media (min-width: 768px) {
+  .cal-bento-band {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.75rem;
+    padding: 2.5rem;
+  }
+}
+
+/* SEO pages: setup as a grid of numbered step cards (SetupSteps). */
+.cal-steps-grid {
+  display: grid;
+  gap: 12px;
+  counter-reset: none;
+}
+
+@media (min-width: 640px) {
+  .cal-steps-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cal-step-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+}
+
+.cal-step-num {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: var(--cal-blue-soft);
+  color: var(--cal-blue);
+  font-family: var(--font-cal-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* SEO section bullets as a checklist: blue check in a soft circle. */
+.cal-checklist {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 20px;
+  background: var(--cal-hero);
+  color: var(--site-text);
+}
+
+.cal-checklist li {
+  position: relative;
+  padding-left: 2rem;
+  line-height: 1.6;
+}
+
+.cal-checklist li::before {
+  content: "";
+  position: absolute;
+  top: 0.2rem;
+  left: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: var(--cal-blue-soft)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23006bff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 10.5 2.5 2.5L14 7.5'/%3E%3C/svg%3E")
+    center / 0.875rem no-repeat;
+}
+
+/* Integration pages: "Omentir + X" marks in the hero, sticky facts card. */
+.cal-pair {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cal-pair-tile {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 20px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+}
+
+.cal-pair-tile > span {
+  border: 0;
+  background: transparent;
+}
+
+.cal-pair-plus {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--cal-muted);
+}
+
+.cal-side-layout {
+  display: grid;
+  gap: 2.5rem;
+  width: calc(100% - 2 * var(--omentir-page-pad-x));
+  max-width: calc(var(--omentir-primary-max-width) - 2 * var(--omentir-page-pad-x-md));
+  margin-inline: auto;
+  padding-block: 3.5rem 5rem;
+}
+
+@media (min-width: 1024px) {
+  .cal-side-layout {
+    grid-template-columns: 18rem minmax(0, 46rem);
+    justify-content: center;
+    gap: 4rem;
+    padding-block: 4.5rem 7rem;
+  }
+
+  .cal-facts {
+    position: sticky;
+    top: 6.5rem;
+    align-self: start;
+  }
+}
+
+/* Phones: facts sit above the story, so keep them to a compact two-column
+   list; the endpoints repeat in the setup steps and show from 1024px. */
+@media (max-width: 1023px) {
+  .cal-facts dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cal-facts dl > div:last-child,
+  .cal-facts > .cal-underline-link {
+    display: none;
+  }
+}
+
+.cal-facts {
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+}
+
+.cal-facts-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-cal-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.cal-facts-mark {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--site-text) 5%, transparent);
+}
+
+.cal-facts-mark > span {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.4rem;
+  border: 0;
+  background: transparent;
+}
+
+.cal-facts dl {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--site-border);
+}
+
+.cal-facts dt {
+  font-size: 0.8125rem;
+  color: var(--cal-muted);
+}
+
+.cal-facts dd {
+  margin-top: 0.2rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.cal-facts-code {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.5rem !important;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--site-text) 5%, transparent);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem !important;
+  word-break: break-all;
+}
+
+.cal-facts-code span {
+  font-family: var(--font-cal-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cal-muted);
+}
+
+/* Help article: the direct answer set apart as a card. */
+.cal-answer {
+  padding: 1.5rem 1.75rem;
+  border-radius: 24px;
+  background: var(--cal-hero);
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  color: var(--site-text);
+}
+
+.cal-post-tag-link {
+  align-items: center;
+}
+
+/* Help center topic tiles (help index). */
+.cal-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .cal-topic-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cal-topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.25rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.cal-topic-card:hover {
+  background: var(--cal-hover);
+  transform: translateY(-2px);
+}
+
+.cal-topic-card strong {
+  margin-top: 0.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.cal-topic-card span:last-child {
+  font-size: 0.8125rem;
+  color: var(--cal-muted);
+}
+
+/* Integrations directory: logo cards (IntegrationsDirectory). */
+.cal-int-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .cal-int-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-int-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.cal-int-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+  color: var(--site-text);
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.cal-int-card:hover {
+  background: var(--cal-hover);
+  transform: translateY(-2px);
+}
+
+.cal-int-logo {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--site-text) 5%, transparent);
+}
+
+.cal-int-logo > span {
+  border: 0;
+  background: transparent;
+}
+
+.cal-int-card strong {
+  font-family: var(--font-cal-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.cal-int-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--cal-muted);
+}
+
+.cal-int-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--cal-muted);
+}
+
+/* Ask AI menu (AskAiMenu): brand marks on a fixed tile. */
+.ask-ai-tile {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--site-text) 5%, transparent);
+}
+
+
+
+:root:has(.cal-site) .m3-menu {
+  border: 0;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-menu-shadow);
+}
+
+/* Scroll reveals: rise 25px and fade, after a short beat. */
+:root:has(.cal-site) .reveal {
+  transition:
+    opacity 700ms cubic-bezier(0.4, 0, 0.2, 1) 100ms,
+    transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 100ms;
+}
+
+:root:has(.cal-site) .reveal[data-reveal-pending] {
+  transform: translateY(25px);
+}
+
+/* Footer: navy card inset from the page edge. */
+.cal-footer-wrap {
+  padding: 0 8px 8px;
+}
+
+@media (min-width: 768px) {
+  .cal-footer-wrap {
+    padding: 0 24px 24px;
+  }
+}
+
+.cal-footer {
+  --cal-footer-muted: color-mix(in oklab, var(--cal-footer-ink) 70%, transparent);
+  --cal-footer-line: color-mix(in oklab, var(--cal-footer-ink) 10%, transparent);
+  padding: 3.5rem 1.5rem 2rem;
+  border-radius: 32px;
+  background: var(--cal-footer);
+  color: var(--cal-footer-ink);
+}
+
+@media (min-width: 768px) {
+  .cal-footer {
+    padding: 6rem 6rem 3rem;
+    border-radius: 64px;
+  }
+}
+
+.cal-footer-top {
+  display: grid;
+  gap: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .cal-footer-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+  }
+}
+
+.cal-footer-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.cal-footer-statement {
+  max-width: 24rem;
+  font-family: var(--font-cal-display);
+  font-size: clamp(2.5rem, 4.5vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.024em;
+  color: var(--cal-footer-ink);
+}
+
+.cal-footer-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  align-self: flex-start;
+  font-family: var(--font-cal-display);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.cal-footer-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .cal-footer-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.cal-footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+:root:has(.cal-site) .cal-footer .cal-footer-heading {
+  margin-bottom: 0.75rem;
+  color: var(--cal-footer-ink);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.cal-footer-links {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.cal-footer-links a,
+.cal-footer-legal-links a {
+  color: var(--cal-footer-muted);
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-footer-links a:hover,
+.cal-footer-legal-links a:hover {
+  color: var(--cal-footer-ink);
+}
+
+.cal-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 4rem;
+  padding-top: 3.5rem;
+  border-top: 1px solid var(--cal-footer-line);
+}
+
+.cal-footer-label {
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .cal-footer-social {
+    text-align: right;
+  }
+}
+
+.cal-footer-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .cal-footer-social .cal-footer-tiles {
+    justify-content: flex-end;
+  }
+}
+
+.cal-footer-tile {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--cal-footer-line);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--cal-footer-ink) 5%, transparent);
+  color: var(--cal-footer-ink);
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-footer-tile:hover {
+  background: color-mix(in oklab, var(--cal-footer-ink) 12%, transparent);
+}
+
+/* Logo tiles: drop the logo component's own box and draw the marks in the
+   footer ink, whatever the page theme. */
+.cal-footer-tiles.is-logos .cal-footer-tile > span {
+  border: 0;
+  background: transparent;
+}
+
+.cal-footer-tiles.is-logos img {
+  filter: invert(1) !important;
+}
+
+.cal-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  margin-top: 3.5rem;
+  font-size: 0.875rem;
+  color: var(--cal-footer-muted);
+}
+
+.cal-footer-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.cal-footer .site-theme-toggle {
+  border-color: var(--cal-footer-line);
+}
+
+.cal-footer .site-theme-toggle button {
+  color: var(--cal-footer-muted);
+}
+
+.cal-footer .site-theme-toggle button[aria-pressed="true"] {
+  background-color: color-mix(in oklab, var(--cal-footer-ink) 14%, transparent);
+  color: var(--cal-footer-ink);
+}
+
+/* Inactive squircles dim into the navy page in dark mode. */
+:root:not([data-site-theme="light"]) .squircle-icon.is-muted {
+  --sq-fill: #22364d;
+  --sq-ink: #8ea0b3;
+}
+
+/* Customer logo strip (CustomerLogoWall): muted marks drifting in a slow
+   loop, faded at both edges, paused while the pointer is on it. */
+.cal-logos-label {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--cal-muted, var(--site-text-2));
+}
+
+/* Same box as the floating header bar (.cal-header header): logos scroll
+   between its edges and fade out right at them. */
+.cal-logos-viewport {
+  width: calc(100% - 2 * var(--omentir-page-pad-x));
+  max-width: calc(var(--omentir-primary-max-width) - 2 * var(--omentir-page-pad-x-md));
+  margin: 2.5rem auto 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+}
+
+.cal-logos-track {
+  display: flex;
+  width: max-content;
+  animation: cal-logos-scroll 40s linear infinite;
+}
+
+.cal-logos-viewport:hover .cal-logos-track {
+  animation-play-state: paused;
+}
+
+.cal-logos-set {
+  display: flex;
+  align-items: center;
+  gap: 4.5rem;
+  padding-right: 4.5rem;
+}
+
+.cal-logo-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  outline: none;
+}
+
+.cal-logo-link:focus-visible {
+  outline: 2px solid var(--site-text);
+  outline-offset: 6px;
+}
+
+/* Per asset kind (see CustomerLogoWall): wordmarks go grey and darken
+   (light) or lift (dark); app-icon tiles go grey as they are; silhouettes
+   and the knockout mark take the page ink. Hover restores colour where the
+   asset has any. */
+.cal-logo-img {
+  opacity: 0.72;
+  filter: grayscale(1) contrast(1.35) brightness(0.5);
+  transition: opacity 200ms ease, filter 200ms ease;
+}
+
+.cal-logo-img[data-own-plate] {
+  opacity: 0.8;
+  filter: grayscale(1);
+}
+
+.cal-logo-img[data-silhouette] {
+  filter: brightness(0);
+}
+
+/* White mark on a black square, shown as page ink through the logo's
+   luminance (set inline as the mask image). */
+.cal-logo-knockout {
+  display: block;
+  background-color: var(--site-text);
+  filter: none;
+  mask-mode: luminance;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-source-type: luminance;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+:root:not([data-site-theme="light"]) .cal-logo-img {
+  filter: grayscale(1) brightness(1.45) contrast(0.95);
+}
+
+:root:not([data-site-theme="light"]) .cal-logo-img[data-own-plate] {
+  filter: grayscale(1) brightness(1.15);
+}
+
+:root:not([data-site-theme="light"]) .cal-logo-img[data-silhouette] {
+  filter: brightness(0) invert(1);
+}
+
+:root:not([data-site-theme="light"]) .cal-logo-knockout {
+  filter: none;
+}
+
+.cal-logo-link:is(:hover, :focus-visible) .cal-logo-img {
+  opacity: 1;
+}
+
+.cal-logo-link:is(:hover, :focus-visible) .cal-logo-img:not([data-silhouette], .cal-logo-knockout) {
+  filter: none;
+}
+
+@keyframes cal-logos-scroll {
+  to { transform: translateX(-50%); }
+}
+
+/* No drift: one centered, wrapping row without the duplicate copy. */
+@media (prefers-reduced-motion: reduce) {
+  .cal-logos-viewport {
+    mask-image: none;
+  }
+
+  .cal-logos-track {
+    width: auto;
+    justify-content: center;
+    animation: none;
+  }
+
+  .cal-logos-set {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2.5rem 3.5rem;
+    padding: 0 1rem;
+  }
+
+  .cal-logos-set[aria-hidden] {
+    display: none;
+  }
+}
+
+/* Shared marketing type: display face on page and section headings, the
+   serif stays a homepage accent. Product mocks keep their own type. */
+/* :where keeps this a default, so section styles (like the homepage serif
+   heading) still override it. */
+:where(:root:has(.cal-site) main) :is(h1, h2):not(.home-mock-app *),
+:where(:root:has(.cal-site)) :is(.hero-display, .hero-display-sentence, .faq-section-heading) {
+  font-family: var(--font-cal-display);
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+
+:where(:root:has(.cal-site) main) h3:not(.home-mock-app *) {
+  font-weight: 500;
+}
+
+:root:has(.cal-site) .hero-lede {
+  color: var(--cal-muted);
+}
+
+/* Buttons and cards: 16px corners instead of pills, soft shadow on cards. */
+:root:has(.cal-site) :is(.m3-btn, .m3-btn-pair > .m3-btn),
+:root:has(.cal-site) :is(button, a):is([class~="bg-[#ba3871]"], [class~="bg-[#e85e6b]"], [class~="bg-zinc-900"], [class~="bg-[#0a66c2]"], [class~="bg-black"]),
+:root:has(.cal-site) :is(button, a)[class~="border"]:is([class~="bg-white"], [class~="bg-transparent"])[class*="px-"] {
+  border-radius: 16px;
+}
+
+:root:has(.cal-site) .site-price-card {
+  border-color: transparent;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-shadow);
+}
+
+/* Login / signup / SSO landing in the marketing theme (AuthShell
+   `marketing`): the form sits in a white card on a gradient panel. */
+.cal-auth-stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  /* No site header on auth pages; the panel is inset like the hero.
+     Phones keep the panel padding thin so the form gets most of the width. */
+  flex-direction: column;
+  gap: 1.75rem;
+  margin: 8px 8px 0;
+  padding: 2rem 0.5rem;
+  border-radius: 28px;
+  background:
+    radial-gradient(55% 65% at 18% 35%, color-mix(in oklab, #2f7de0 70%, var(--cal-grad-a)), transparent 72%),
+    radial-gradient(55% 60% at 85% 15%, var(--cal-grad-a), transparent 70%),
+    radial-gradient(70% 60% at 50% 115%, var(--cal-grad-c), transparent 72%),
+    var(--cal-grad-a);
+}
+
+@media (min-width: 768px) {
+  .cal-auth-stage {
+    margin: 16px 16px 0;
+    padding: 5rem 2rem;
+    border-radius: 32px;
+  }
+}
+
+.cal-auth-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--site-text);
+}
+
+.cal-auth-card {
+  width: min(100%, 27rem);
+  padding: 1.75rem 1.25rem;
+  border-radius: 24px;
+  background: var(--cal-surface);
+  box-shadow: var(--cal-menu-shadow);
+}
+
+@media (min-width: 768px) {
+  .cal-auth-card {
+    padding: 2rem;
+  }
+
+}
+
+.cal-auth-footer {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--cal-muted);
+}
+
+/* Form pieces, restyled inside the card. */
+.cal-auth .cal-auth-form h1 {
+  font-family: var(--font-cal-display);
+  font-size: 2.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.cal-auth .auth-muted {
+  color: var(--cal-muted);
+}
+
+.cal-auth .auth-label {
+  font-size: 0.875rem;
+  color: var(--cal-muted);
+}
+
+.cal-auth .auth-input {
+  height: 48px;
+  padding: 0 16px;
+  border-color: color-mix(in oklab, var(--site-text) 22%, transparent);
+  border-radius: 16px;
+  background: var(--cal-surface);
+  font-size: 1rem;
+}
+
+.cal-auth .auth-input:focus {
+  border-color: var(--site-text);
+}
+
+.cal-auth .auth-input:-webkit-autofill,
+.cal-auth .auth-input:-webkit-autofill:hover,
+.cal-auth .auth-input:-webkit-autofill:focus {
+  box-shadow: 0 0 0 1000px var(--cal-surface) inset;
+}
+
+.cal-auth :is(.auth-btn, .auth-social) {
+  height: 50px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* !important: the legacy `html.dark .auth-btn-signup` olive fill is. */
+:root:has(.cal-site) .cal-auth :is(.auth-btn, .auth-btn-signup) {
+  border-color: var(--site-text) !important;
+  background: var(--site-text) !important;
+  color: var(--site-bg) !important;
+}
+
+:root:has(.cal-site) .cal-auth :is(.auth-btn, .auth-btn-signup):hover:not(:disabled) {
+  border-color: var(--cal-primary-hover) !important;
+  background: var(--cal-primary-hover) !important;
+}
+
+.cal-auth .auth-social {
+  border-color: var(--site-text);
+  background: transparent;
+  color: var(--site-text);
+}
+
+.cal-auth .auth-social:hover:not(:disabled) {
+  background: var(--cal-hover);
+}
+
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
+  color: var(--site-text-2);
+}
+
+.auth-or::before,
+.auth-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--site-border);
+}
+
+.cal-auth .auth-or {
+  color: var(--cal-muted);
+}
+
+.cal-auth .auth-muted.text-center {
+  font-size: 0.875rem;
+}
+
+.cal-auth .auth-switch-link {
+  font-weight: 500;
+  color: var(--site-text);
+}
+
+/* Marketing theme fields: 16px corners, not the site-wide pill. Doubled
+   :root + :has() outranks the pill rule's :not() chain (both !important). */
+:root:root:has(.cal-site) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"]),
+:root:root:has(.cal-site) select {
+  border-radius: 16px !important;
+}
+
+/* The global `html.dark input` fill, border and 2px focus ring (all
+   !important, and <html> always carries .dark) would tint the white card;
+   this selector outranks that :not() chain. */
+:root:root:has(.cal-site) .cal-auth :is(input, select).auth-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]) {
+  border-width: 1px;
+  border-color: color-mix(in oklab, var(--site-text) 22%, transparent) !important;
+  background-color: var(--cal-surface) !important;
+  color: var(--site-text) !important;
+}
+
+:root:root:has(.cal-site) .cal-auth :is(input, select).auth-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):focus {
+  border-width: 1px;
+  border-color: var(--site-text) !important;
+  /* Dark border only on focus, no light-blue ring (same as .site-input). */
+  box-shadow: none !important;
+}
+
+/* Site-wide controls copy the auth card (login, signup, onboarding): 50px
+   buttons with 20px corners (44px / 16px in the header), 48px fields with
+   16px corners. Two button kinds only, like the auth card: filled ink
+   (primary) and outlined ink (outline; secondary renders the same).
+   :root:root:has() + !important outrank the old site-wide pill rule and the
+   global `html.dark input` fill/ring chain. */
+:root:root:has(.cal-site) .site-btn {
+  height: 50px;
+  padding: 0 1.5rem;
+  border-radius: 20px !important;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+:root:root:has(.cal-site) .site-btn-sm {
+  height: 44px;
+  padding: 0 1rem;
+  border-radius: 16px !important;
+  font-size: 0.875rem;
+}
+
+:root:root:has(.cal-site) :is(.site-btn-outline, .site-btn-secondary) {
+  border-color: var(--site-text);
+  background: transparent;
+  color: var(--site-text);
+}
+
+:root:root:has(.cal-site) :is(.site-btn-outline, .site-btn-secondary):hover {
+  background: var(--cal-hover);
+}
+
+.site-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+:root:root:has(.cal-site) :is(input, select, textarea).site-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]) {
+  border-width: 1px;
+  border-style: solid;
+  border-color: color-mix(in oklab, var(--site-text) 22%, transparent) !important;
+  border-radius: 16px !important;
+  background-color: var(--cal-surface) !important;
+  color: var(--site-text) !important;
+  font-size: 1rem;
+  line-height: 1.5;
+  outline: none;
+}
+
+:root:root:has(.cal-site) :is(input, select).site-input {
+  height: 48px;
+  padding: 0 16px;
+}
+
+/* Multi-line: same border, fill and corners; height comes from rows. */
+:root:root:has(.cal-site) textarea.site-input {
+  padding: 12px 16px;
+}
+
+:root:root:has(.cal-site) :is(input, select, textarea).site-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):focus {
+  border-width: 1px !important;
+  border-color: var(--site-text) !important;
+  /* Dark border only on focus, no light-blue ring. */
+  box-shadow: none !important;
+}
+
+.site-input::placeholder {
+  color: var(--cal-muted);
+}
+
+/* Onboarding (OnboardingShell): split screen modelled on Calendly's own
+   onboarding, with its exact measures (812px column, 22px bold questions,
+   8px cards, 54px options, 16px gaps). Its own palette (--ob-*); the
+   `cal-site` marker on the shell still supplies the marketing tokens the
+   illustration cards use. Figtree stands in for Proxima Nova. */
+.cal-onboard {
+  --ob-bg: #fafafa;
+  --ob-art: #f2f8ff;
+  --ob-ink: #0a2540;
+  --ob-muted: rgb(26 26 26 / 0.61);
+  --ob-border: #cccccc;
+  --ob-blue: #0069ff;
+  --ob-blue-hover: #0055d4;
+  --ob-card: #ffffff;
+  --ob-hover: #f2f8ff;
+  --ob-shadow: 0 2px 15px rgb(0 0 0 / 0.1);
+  --ob-shape-grey: #dfe4eb;
+  --ob-shape-lime: #d3ee46;
+  --ob-shape-violet: #7658f6;
+  display: flex;
+  min-height: 100vh;
+  background: var(--ob-bg);
+  color: var(--ob-ink);
+  font-family: var(--font-onboard);
+}
+
+:root:not([data-site-theme="light"]) .cal-onboard {
+  --ob-bg: #0b1522;
+  --ob-art: #0f1e31;
+  --ob-ink: #e8eef5;
+  --ob-muted: rgb(232 238 245 / 0.62);
+  --ob-border: #34465c;
+  --ob-blue: #4d94ff;
+  --ob-blue-hover: #6aa6ff;
+  --ob-card: #13233a;
+  --ob-hover: #17304d;
+  --ob-shadow: 0 2px 15px rgb(0 0 0 / 0.4);
+  --ob-shape-grey: #1c2d44;
+  --ob-shape-lime: #9fb83a;
+  --ob-shape-violet: #5a44c4;
+}
+
+.cal-onboard :is(h1, h2, h3, legend, button, input, textarea, select, label) {
+  font-family: var(--font-onboard);
+}
+
+.cal-onboard-main {
+  display: flex;
+  flex: 1 1 100%;
+  justify-content: center;
+  min-width: 0;
+  padding: 32px 24px 28px;
+}
+
+
+.cal-onboard-col {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 812px;
+  min-height: calc(100vh - 60px);
+}
+
+.cal-onboard-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 38px;
+  margin-bottom: 40px;
+}
+
+.cal-onboard-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ob-ink);
+}
+
+.cal-onboard-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-onboard-progress-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--ob-ink);
+}
+
+.cal-onboard-progress-bar {
+  display: flex;
+  width: 150px;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--ob-border);
+  border-radius: 8px;
+  background: var(--ob-card);
+}
+
+.cal-onboard-progress-bar > span {
+  flex: 1;
+  transition: background-color 500ms ease-out;
+}
+
+.cal-onboard-progress-bar > span.is-filled {
+  background: var(--ob-blue);
+}
+
+/* Step headings (AuthHeading and the first question): 22px bold. */
+.cal-onboard .cal-onboard-body h1,
+.cal-onboard .cal-onboard-q-title {
+  display: block;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: normal;
+  color: var(--ob-ink);
+}
+
+.cal-onboard .cal-onboard-body > .mb-8 {
+  margin-bottom: 24px;
+}
+
+.cal-onboard .cal-onboard-body > .mb-8 p,
+.cal-onboard-q-hint {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ob-muted);
+}
+
+.cal-onboard-q-hint {
+  margin-bottom: 24px;
+}
+
+.cal-onboard-form {
+  display: grid;
+  gap: 24px;
+}
+
+.cal-onboard-question {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cal-onboard-panel {
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--ob-card);
+  box-shadow: var(--ob-shadow);
+}
+
+.cal-onboard-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cal-onboard-next {
+  min-width: 164px;
+  height: 40px;
+  padding: 0 24px;
+  border: 1px solid var(--ob-blue);
+  border-radius: 9999px;
+  background: var(--ob-blue);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.cal-onboard-next:hover:not(:disabled) {
+  border-color: var(--ob-blue-hover);
+  background: var(--ob-blue-hover);
+}
+
+.cal-onboard-next:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.cal-onboard-note {
+  margin-top: auto;
+  padding-top: 40px;
+  font-size: 14px;
+  line-height: 21px;
+  text-align: center;
+  color: var(--ob-ink);
+}
+
+.cal-onboard-note a {
+  font-weight: 700;
+  color: var(--ob-ink);
+}
+
+.cal-onboard-note a:hover {
+  text-decoration: underline;
+}
+
+/* Existing step components inside the frame: blue pill actions, 8px
+   fields. !important and the doubled :root / :not() chain beat the global
+   `html.dark` field, pill-input and olive signup-button rules. */
+:root:has(.cal-site) .cal-onboard :is(.auth-btn, .auth-btn-signup) {
+  height: 40px;
+  border: 1px solid var(--ob-blue) !important;
+  border-radius: 9999px;
+  background: var(--ob-blue) !important;
+  color: #ffffff !important;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+:root:has(.cal-site) .cal-onboard :is(.auth-btn, .auth-btn-signup):hover:not(:disabled) {
+  border-color: var(--ob-blue-hover) !important;
+  background: var(--ob-blue-hover) !important;
+}
+
+:root:root:has(.cal-site) .cal-onboard input.auth-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+:root:root:has(.cal-site) .cal-onboard :is(select.auth-input, textarea.auth-textarea) {
+  border-width: 1px;
+  border-color: var(--ob-border) !important;
+  border-radius: 8px !important;
+  background-color: var(--ob-card) !important;
+  color: var(--ob-ink) !important;
+  font-size: 14px;
+}
+
+:root:root:has(.cal-site) .cal-onboard input.auth-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):focus,
+:root:root:has(.cal-site) .cal-onboard :is(select.auth-input, textarea.auth-textarea):focus {
+  /* Dark border only on focus, no blue ring (same as .site-input). */
+  border-width: 1px;
+  border-color: var(--ob-ink) !important;
+  box-shadow: none !important;
+}
+
+.cal-onboard .auth-input {
+  height: 46px;
+  padding: 0 14px;
+}
+
+/* Dropdown questions: room for the chevron, and a tighter gap under the
+   hint since there is no card around the field. */
+.cal-onboard select.auth-input {
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.cal-onboard-q-hint + select {
+  margin-top: -8px;
+}
+
+/* A button sitting beside a field (the website Fetch) takes the field's
+   height and corners, so the pair reads as one row. */
+:root:has(.cal-site) .cal-onboard .auth-btn.auth-btn-fit {
+  height: 46px;
+  padding: 0 22px;
+  border-radius: 8px;
+}
+
+.cal-onboard .auth-textarea {
+  padding: 12px 14px;
+}
+
+.cal-onboard .auth-label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ob-ink);
+}
+
+
+/* Marketing pricing cards (PricingCards `site`): white top on a cream card,
+   the featured plan in a gradient frame with a label. */
+.cal-price-grid {
+  display: grid;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .cal-price-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Unframed cards start level with the framed card's inner card. */
+  .cal-price-grid > .cal-price {
+    margin-top: 2.125rem;
+  }
+}
+
+/* No fixed height: the grid stretches each column to the row, so every card
+   ends on the same line and the shorter list just leaves space below it. */
+.cal-price {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px 24px;
+  border-radius: 40px;
+  background: var(--cal-hero, var(--site-card-2));
+}
+
+.cal-price-top {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 32px;
+  background: var(--cal-surface, var(--site-card));
+  box-shadow: var(--cal-shadow, none);
+}
+
+:root:has(.cal-site) .cal-price .cal-price-name {
+  font-family: var(--font-cal-display);
+  font-size: 2.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.cal-price-note {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--cal-muted, var(--site-text-2));
+}
+
+.cal-price-amount {
+  margin: 12px 0 4px;
+  font-family: var(--font-cal-serif);
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.cal-price-amount small {
+  margin-left: 4px;
+  font-family: var(--font-site-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--cal-muted, var(--site-text-2));
+}
+
+.cal-price-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* Same 50px / 20px button as .site-btn and the auth card. */
+  height: 50px;
+  padding: 0 20px;
+  border: 1px solid var(--site-text);
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--site-text);
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-price-cta:hover {
+  background: var(--cal-hover, var(--site-card-2));
+}
+
+.cal-price-cta.is-primary {
+  background: var(--site-text);
+  color: var(--site-bg);
+}
+
+.cal-price-cta.is-primary:hover {
+  border-color: var(--cal-primary-hover, var(--site-text));
+  background: var(--cal-primary-hover, var(--site-text));
+}
+
+.cal-price-cta.is-current {
+  justify-content: center;
+  cursor: default;
+  opacity: 0.7;
+}
+
+.cal-price-body {
+  padding: 24px 16px 0;
+}
+
+.cal-price-includes {
+  margin-bottom: 14px;
+  font-size: 0.8125rem;
+  color: var(--cal-muted, var(--site-text-2));
+}
+
+.cal-price-features {
+  display: grid;
+  gap: 10px;
+}
+
+.cal-price-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--site-text);
+}
+
+.cal-price-frame {
+  display: flex;
+  flex-direction: column;
+  padding: 0 6px 6px;
+  border-radius: 44px;
+  background: linear-gradient(to bottom, #1f5fd0 0%, #3b82f6 16%, #f3a57f 58%, #a98cf6 100%);
+}
+
+/* The label reads as a note in the serif italic, not a caps badge. */
+.cal-price-flag {
+  /* 8 + 20 + 6 = 34px, the same 2.125rem the unframed card is pushed down,
+     so the white tops of both cards stay level. */
+  padding: 8px 20px 6px;
+  font-family: var(--font-cal-serif);
+  font-size: 1.0625rem;
+  line-height: 20px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.cal-price-frame > .cal-price {
+  flex: 1;
+  border-radius: 38px;
+}
+
+/* FAQ (FaqAccordion, FaqSplitSection): "+" box, question, sliding answer. */
+.cal-faq-panel {
+  padding: 4rem 1rem;
+  border-radius: 32px;
+  background: var(--cal-hero, var(--site-card));
+}
+
+@media (min-width: 768px) {
+  .cal-faq-panel {
+    padding: 6rem 3rem;
+    border-radius: 48px;
+  }
+}
+
+:root:has(.cal-site) .cal-faq-panel .cal-faq-heading {
+  text-align: center;
+  font-family: var(--font-cal-serif);
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.cal-faq-list {
+  max-width: 770px;
+  margin: 3rem auto 0;
+}
+
+.cal-faq-row {
+  border-bottom: 1px solid color-mix(in oklab, var(--site-text) 10%, transparent);
+}
+
+.cal-faq-q {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 24px 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .cal-faq-q {
+    padding: 24px;
+  }
+}
+
+.cal-faq-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in oklab, var(--site-text) 10%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--site-text) 5%, transparent);
+  color: var(--site-text);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms ease;
+}
+
+.cal-faq-q:hover .cal-faq-icon {
+  background: color-mix(in oklab, var(--site-text) 10%, transparent);
+}
+
+.cal-faq-row.is-open .cal-faq-icon {
+  transform: rotate(45deg);
+}
+
+.cal-faq-text {
+  padding-top: 2px;
+  font-family: var(--font-cal-display, var(--font-site-sans));
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--site-text);
+}
+
+@media (min-width: 768px) {
+  .cal-faq-text {
+    font-size: 1.25rem;
+  }
+}
+
+.cal-faq-a {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cal-faq-row.is-open .cal-faq-a {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.cal-faq-a p {
+  padding: 0 8px 24px 56px;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--cal-muted, var(--site-text-2));
+}
+
+@media (min-width: 768px) {
+  .cal-faq-a p {
+    padding: 0 24px 24px 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-faq-a,
+  .cal-faq-icon {
+    transition: none;
+  }
 }

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import JsonLd from "../json-ld";
 import {
-  ArticleCrumbs,
   articlePathCrumbs,
+  CalLinkCards,
+  CalPageHero,
   MarketingFooter,
   MarketingHeader,
 } from "../marketing-shell";
@@ -13,7 +13,9 @@ import {
   siteUrl,
 } from "../seo";
 import { getHelpPages, groupedHelp, liveSeoPages } from "@/lib/cms";
-import { HELP_CLUSTER_LABELS } from "./types";
+import SquircleIcon from "../squircle-icon";
+import { CLUSTER_ICON, HELP_CLUSTER_LABELS } from "./types";
+
 
 const title = "LinkedIn outreach help";
 const description =
@@ -74,46 +76,43 @@ export default async function HelpIndexPage() {
       <JsonLd id="help-index-jsonld" data={jsonLd} />
       <main className="site-theme min-h-screen overflow-x-hidden">
         <MarketingHeader transparentAtTop />
-        <div className="relative">
-          <div className="omentir-secondary-width relative z-10 min-w-0 pb-16 pt-28 md:pb-24 md:pt-32">
-            <ArticleCrumbs crumbs={articlePathCrumbs("help")} />
-
-            <h1
-              style={{ fontFamily: "var(--font-varta)" }}
-              className="text-2xl font-semibold leading-snug tracking-tight text-[var(--md-sys-color-on-surface)] md:text-3xl"
-            >
-              {title}
-            </h1>
-            <p className="mt-12 max-w-2xl text-base font-medium leading-8 text-[var(--md-sys-color-on-surface)] md:mt-16">
-              {description} Each page is one question. The extra detail sits in the FAQ
-              under the answer.
-            </p>
-
-            <div className="mt-16 space-y-14 md:mt-20">
-              {groups.map((group) => (
-                <section key={group.cluster}>
-                  <h2
-                    style={{ fontFamily: "var(--font-varta)" }}
-                    className="border-b border-[var(--md-sys-color-outline-variant)] pb-2 text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
-                  >
-                    {HELP_CLUSTER_LABELS[group.cluster]}
-                  </h2>
-                  <ul className="divide-y divide-[var(--md-sys-color-outline-variant)] border-b border-[var(--md-sys-color-outline-variant)]">
-                    {group.pages.map((page) => (
-                      <li key={page.slug}>
-                        <Link
-                          href={`/help/${page.slug}`}
-                          className="group block py-4 text-[var(--md-sys-color-on-surface)] transition-colors hover:text-[var(--md-sys-color-primary)]"
-                        >
-                          {page.question}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          </div>
+        <CalPageHero
+          crumbs={articlePathCrumbs("help")}
+          title={title}
+          description={`${description} Each page is one question. The extra detail sits in the FAQ under the answer.`}
+        />
+        <div className="cal-read cal-read-wide space-y-14 md:space-y-16">
+          <nav aria-label="Browse by topic">
+            <ul className="cal-topic-grid">
+              {groups.map((group) => {
+                const [icon, tone] = CLUSTER_ICON[group.cluster];
+                return (
+                  <li key={group.cluster}>
+                    <a href={`#${group.cluster}`} className="cal-topic-card">
+                      <SquircleIcon icon={icon} tone={tone} size={40} />
+                      <strong>{HELP_CLUSTER_LABELS[group.cluster]}</strong>
+                      <span>
+                        {group.pages.length} {group.pages.length === 1 ? "question" : "questions"}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          {groups.map((group) => (
+            <section key={group.cluster} id={group.cluster} className="scroll-mt-28">
+              <h2 className="cal-read-h2 flex items-center gap-3">
+                <SquircleIcon icon={CLUSTER_ICON[group.cluster][0]} tone={CLUSTER_ICON[group.cluster][1]} size={32} />
+                {HELP_CLUSTER_LABELS[group.cluster]}
+              </h2>
+              <div className="mt-6">
+                <CalLinkCards
+                  links={group.pages.map((page) => ({ href: `/help/${page.slug}`, label: page.question }))}
+                />
+              </div>
+            </section>
+          ))}
         </div>
         <MarketingFooter />
       </main>

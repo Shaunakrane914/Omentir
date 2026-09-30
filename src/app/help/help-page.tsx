@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import FaqAccordion from "../faq-accordion";
 import JsonLd from "../json-ld";
 import {
-  ArticleCrumbs,
   articlePathCrumbs,
+  CalCtaPanel,
+  CalLinkCards,
+  CalPageHero,
   MarketingFooter,
   MarketingHeader,
 } from "../marketing-shell";
@@ -16,7 +18,8 @@ import {
 } from "../seo";
 import GrokBotSetupBlock from "../grok-bot-setup-block";
 import { MarkdownTwinLink } from "../seo-content/shared";
-import { type HelpPage } from "./types";
+import SquircleIcon from "../squircle-icon";
+import { CLUSTER_ICON, HELP_CLUSTER_LABELS, type HelpPage } from "./types";
 
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
@@ -73,78 +76,64 @@ export default function HelpArticle({ page }: { page: HelpPage }) {
       <JsonLd id={`help-${page.slug}-jsonld`} data={jsonLd} />
       <main className="site-theme min-h-screen overflow-x-hidden">
         <MarketingHeader transparentAtTop />
-        {/* cursor.com article layout: crumbs in a sticky left column. */}
-        <div className="omentir-primary-width grid min-w-0 gap-6 pb-20 pt-28 md:grid-cols-[12rem_minmax(0,42rem)] md:gap-16 md:pb-28 md:pt-32 lg:grid-cols-[14rem_minmax(0,42rem)] lg:gap-24">
-          <div className="md:sticky md:top-28 md:self-start">
-            <ArticleCrumbs crumbs={articlePathCrumbs("help", page.slug)} className="" />
+        <CalPageHero
+          crumbs={articlePathCrumbs("help", page.slug)}
+          leading={
+            <>
+            <Link href={`/help#${page.cluster}`} className="cal-post-tag cal-post-tag-link mb-5">
+              <SquircleIcon icon={CLUSTER_ICON[page.cluster][0]} tone={CLUSTER_ICON[page.cluster][1]} size={18} />
+              {HELP_CLUSTER_LABELS[page.cluster]}
+            </Link>
+            </>
+          }
+          title={page.question}
+        />
+        <article className="cal-read">
+          {/* The first paragraph is the direct answer: set apart as a card so
+              the answer is the first thing you see. */}
+          {page.paragraphs[0] ? (
+            <p className="cal-answer">{renderInline(page.paragraphs[0])}</p>
+          ) : null}
+          <div className="mt-8 space-y-5 text-[1.0625rem] leading-8 text-[var(--site-text)]">
+            {page.paragraphs.slice(1).map((paragraph, index) => (
+              <p key={index}>{renderInline(paragraph)}</p>
+            ))}
           </div>
-          <article className="min-w-0">
-            <h1 className="text-[1.75rem] leading-tight tracking-[-0.0125em] text-[var(--site-text)] md:text-[2rem]">
-              {page.question}
-            </h1>
 
-            <div className="mt-10 space-y-5 text-base leading-7 text-[var(--site-text)]">
-              {page.paragraphs.map((paragraph, index) => (
-                <p key={index}>{renderInline(paragraph)}</p>
-              ))}
-            </div>
+          {page.prompt ? (
+            <section id="paste-prompt" className="mt-12 md:mt-16">
+              <h2 className="cal-read-h2">Paste this into Grok Bot</h2>
+              <GrokBotSetupBlock prompt={page.prompt} />
+            </section>
+          ) : null}
 
-            {page.prompt ? (
-              <section id="paste-prompt" className="mt-12 md:mt-16">
-                <h2 className="text-[1.375rem] leading-tight text-[var(--site-text)]">
-                  Paste this into Grok Bot
-                </h2>
-                <GrokBotSetupBlock prompt={page.prompt} />
-              </section>
-            ) : null}
+          {page.faqItems.length > 0 ? (
+            <section id="faq" className="mt-16 md:mt-20">
+              <h2 className="cal-read-h2">Frequently asked questions</h2>
+              <div className="mt-6 md:mt-8">
+                <FaqAccordion
+                  items={page.faqItems.map((item) => ({
+                    question: item.question,
+                    answer: renderInline(item.answer),
+                  }))}
+                />
+              </div>
+            </section>
+          ) : null}
 
-            {page.faqItems.length > 0 ? (
-              <section id="faq" className="mt-16 md:mt-20">
-                <h2 className="text-[1.375rem] leading-tight text-[var(--site-text)]">
-                  Frequently asked questions
-                </h2>
-                <div className="mt-6 md:mt-8">
-                  <FaqAccordion
-                    items={page.faqItems.map((item) => ({
-                      question: item.question,
-                      answer: renderInline(item.answer),
-                    }))}
-                  />
-                </div>
-              </section>
-            ) : null}
+          {page.related.length > 0 ? (
+            <section id="related" className="mt-16 md:mt-20">
+              <h2 className="cal-read-h2">Related questions</h2>
+              <div className="mt-6">
+                <CalLinkCards links={page.related} />
+              </div>
+            </section>
+          ) : null}
 
-            {page.related.length > 0 ? (
-              <section id="related" className="mt-16 md:mt-20">
-                <h2 className="text-sm text-[var(--site-text-2)]">Related questions</h2>
-                <ul className="blog-table mt-4">
-                  {page.related.map((link) => (
-                    <li key={link.href}>
-                      <Link href={link.href} className="block px-4 py-3 text-sm text-[var(--site-text)] transition-colors hover:bg-[var(--site-card-2)]">
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+          <MarkdownTwinLink path={path} title={page.question} />
 
-            <MarkdownTwinLink path={path} title={page.question} />
-
-            <div className="mt-16 rounded-[16px] border border-[var(--site-border)] bg-[var(--site-card)] px-6 py-8 md:px-8">
-              <p className="text-lg text-[var(--site-text)]">
-                Run the outreach from your own LinkedIn account
-              </p>
-              <p className="mt-2 max-w-lg text-sm leading-6 text-[var(--site-text-2)]">
-                Omentir finds ICP-fit buyers, drafts connection notes and messages, and keeps
-                replies in one inbox. You still choose the daily send limits.
-              </p>
-              <Link href="/signup" className="site-btn site-btn-sm site-btn-primary mt-6">
-                Try Omentir
-              </Link>
-            </div>
-          </article>
-        </div>
+          <CalCtaPanel />
+        </article>
         <MarketingFooter />
       </main>
     </>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createPageMetadata } from "../../seo";
-import BlogPostTemplate from "../blog-post-template";
+import BlogPostTemplate, { shortBlogDate } from "../blog-post-template";
 import { getBlog, getBlogSlugs, getLiveBlogs, isBlogLive } from "@/lib/cms";
 import { skipStaticParamsOnVpsSidecar } from "@/lib/vps-sidecar-build";
 import { BlogPortableText } from "@/lib/cms/portable-text";
@@ -67,8 +67,13 @@ export default async function CmsBlogPage({ params }: PageProps) {
       const rightSame = right.category === post.category ? 0 : 1;
       return leftSame - rightSame;
     })
-    .slice(0, 4)
-    .map((blog) => ({ slug: blog.slug, title: blog.title }));
+    .slice(0, 3)
+    .map((blog) => ({
+      slug: blog.slug,
+      title: blog.title,
+      category: blog.category,
+      date: shortBlogDate(blog.publishedDate),
+    }));
   return (
     <BlogPostTemplate
       title={post.title}
@@ -81,6 +86,7 @@ export default async function CmsBlogPage({ params }: PageProps) {
       publishedDate={post.publishedDate}
       updatedDate={post.updatedDate}
       category={post.category}
+      readTime={post.readTime}
       relatedPosts={relatedPosts}
     >
       <BlogPortableText value={body} />

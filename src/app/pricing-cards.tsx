@@ -54,11 +54,90 @@ function PlanPrice({ price, cadence, site }: { price: string; cadence: string; s
   );
 }
 
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-5 w-5 shrink-0">
+      <path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 type CurrentPlan = "solo" | "lifetime" | "enterprise";
 type PlanKey = "solo" | "enterprise";
 
 function planKeyFromHref(href: string): PlanKey {
   return href.includes("plan=solo") ? "solo" : "enterprise";
+}
+
+/** Marketing card: a white top (name, note, price, arrow button) on a cream
+ *  card that holds the feature list. The featured plan sits in a gradient
+ *  frame with a label. Styled by `.cal-price-*`. */
+function SitePricingCard({
+  plan,
+  cta,
+  current,
+}: {
+  plan: PricingPlan;
+  cta: string;
+  current: boolean;
+}) {
+  const monthly = plan.price.match(/^(\$\d+)\/(month)$/);
+  const buttonClass = `cal-price-cta${plan.featured ? " is-primary" : ""}`;
+
+  const card = (
+    <article className="cal-price">
+      <div className="cal-price-top">
+        <h2 className="cal-price-name">{plan.name}</h2>
+        <p className="cal-price-note">
+          {planKeyFromHref(plan.href) === "solo"
+            ? "Get 3 bookings weekly or receive a full refund."
+            : "Get managed campaigns with bookings guarantees."}
+        </p>
+        <p className="cal-price-amount">
+          {monthly ? (
+            <>
+              {monthly[1]}
+              <small>/{monthly[2]}</small>
+            </>
+          ) : (
+            plan.price
+          )}
+        </p>
+        {current ? (
+          <span className="cal-price-cta is-current">Your current plan</span>
+        ) : plan.href.startsWith("http") ? (
+          <a href={plan.href} target="_blank" rel="noopener noreferrer" className={buttonClass}>
+            {cta}
+            <ArrowIcon />
+          </a>
+        ) : (
+          <Link href={plan.href} className={buttonClass}>
+            {cta}
+            <ArrowIcon />
+          </Link>
+        )}
+      </div>
+      <div className="cal-price-body">
+        {plan.includes ? <p className="cal-price-includes">{plan.includes}</p> : null}
+        <ul className="cal-price-features">
+          {plan.features.map((feature) => (
+            <li key={feature}>
+              <CheckIcon />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  );
+
+  if (!plan.featured) return card;
+  return (
+    <div className="cal-price-frame">
+      <p className="cal-price-flag">Best for solo founders</p>
+      {card}
+    </div>
+  );
 }
 
 function PricingCard({
@@ -80,6 +159,10 @@ function PricingCard({
   const isCoveredByLegacyPlan = currentPlan === "lifetime" && planKey === "solo";
   // Marketing /pricing uses Cursor's 44px pills; the in-app upgrade screens
   // keep the full-width Material buttons.
+  if (site) {
+    return <SitePricingCard plan={plan} cta={cta} current={isCurrent || isCoveredByLegacyPlan} />;
+  }
+
   const ctaClass = site
     ? `site-btn ${plan.featured ? "site-btn-primary" : "site-btn-secondary"}`
     : `m3-btn h-11 w-full cursor-pointer text-sm ${
@@ -182,7 +265,13 @@ export default function PricingCards({
 }) {
   return (
     <div className={className}>
-      <div className="grid w-full grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-5">
+      <div
+        className={
+          site
+            ? "cal-price-grid"
+            : "grid w-full grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-5"
+        }
+      >
         {plans.map((plan) => (
           <PricingCard key={plan.name} plan={plan} currentPlan={currentPlan} subscribeCta={subscribeCta} site={site} />
         ))}

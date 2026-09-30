@@ -65,8 +65,7 @@ const components: PortableTextComponents = {
     h2: ({ children, value }) => (
       <h2
         id={headingIdFromBlock(value) || headingId(children)}
-        style={{ fontFamily: "var(--font-varta)" }}
-        className="mt-10 scroll-mt-28 border-b border-zinc-200 pb-2 pt-2 text-left text-2xl font-semibold tracking-tight text-black"
+        className="mt-10 scroll-mt-28 pt-2 text-left text-2xl font-semibold tracking-tight text-black"
       >
         {children}
       </h2>
@@ -74,7 +73,6 @@ const components: PortableTextComponents = {
     h3: ({ children, value }) => (
       <h3
         id={headingIdFromBlock(value) || headingId(children)}
-        style={{ fontFamily: "var(--font-varta)" }}
         className="mt-8 scroll-mt-28 text-left text-xl font-semibold tracking-tight text-black"
       >
         {children}

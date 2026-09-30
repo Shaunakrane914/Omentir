@@ -363,7 +363,7 @@ export default function WorkspaceSwitcher({
       onClick={goToWorkspace}
       className={
         collapsed
-          ? "grid h-full w-full place-items-center"
+          ? "flex h-full w-full items-center"
           : "flex min-w-0 flex-1 items-center gap-2.5"
       }
     >
@@ -384,7 +384,7 @@ export default function WorkspaceSwitcher({
           aria-haspopup="listbox"
           disabled={pending}
           onClick={() => setOpen((value) => !value)}
-          className="grid h-full w-full place-items-center"
+          className="flex h-full w-full items-center"
         >
           <WorkspaceAvatar name={activeName} faviconUrl={activeWorkspace.faviconUrl} />
         </button>

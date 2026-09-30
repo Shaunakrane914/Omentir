@@ -8,6 +8,7 @@ import NavigationFeedback from "./navigation-feedback";
 import { PostHogProvider } from "./posthog-provider";
 import { buildEarlyFetchScript } from "./sidebar-early-fetch";
 import { siteThemeScript } from "./site-theme-script";
+import SiteThemeSync from "./site-theme-sync";
 import { ToastProvider } from "./toast";
 import { isLocalMode } from "@/lib/runtime-mode";
 import { studioHostRedirectScript } from "@/sanity/studio-host";
@@ -28,6 +29,37 @@ const geistMono = localFont({
   src: "./fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+/* Marketing display faces, free stand-ins for the reference layout's custom
+   fonts: Inter Tight for display headings, Newsreader for serif accents.
+   Not preloaded: only marketing pages use them, and the browser fetches a
+   face only once a rendered element asks for it, so app routes never load
+   these files. */
+const displayFont = localFont({
+  src: "./fonts/inter-tight-latin.woff2",
+  variable: "--font-cal-display",
+  weight: "400 700",
+  preload: false,
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
+});
+
+const serifFont = localFont({
+  src: "./fonts/newsreader-latin.woff2",
+  variable: "--font-cal-serif",
+  weight: "400 600",
+  preload: false,
+  fallback: ["Georgia", "serif"],
+});
+
+/* Onboarding face: Figtree, a free stand-in for the reference onboarding's
+   Proxima Nova. Not preloaded; only /onboarding uses it. */
+const onboardFont = localFont({
+  src: "./fonts/figtree-latin.woff2",
+  variable: "--font-onboard",
+  weight: "400 800",
+  preload: false,
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -110,7 +142,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geist.variable} ${geistMono.variable} antialiased dark`}
+      className={`${geist.variable} ${geistMono.variable} ${displayFont.variable} ${serifFont.variable} ${onboardFont.variable} antialiased dark`}
       data-theme="dark"
       style={
         {
@@ -150,6 +182,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: buildEarlyFetchScript() }} />
       </head>
       <body className="app-compact flex min-h-screen flex-col">
+        <SiteThemeSync />
         {/* ClerkProvider inside body avoids Next 16 / Turbopack races where the
             provider wraps <html> before hydration and Clerk UI chunks stall.
             prefetchUI={false}: this app uses custom login/signup (window.Clerk /

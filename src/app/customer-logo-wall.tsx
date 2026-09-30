@@ -1,16 +1,20 @@
 import Image from "next/image";
+import Reveal from "./scroll-reveal";
 
 /**
  * Customer logos for the landing "used by" strip.
  * Files: public/customer-logos/
  *
- * Visual treatment: each mark sits on a dark olive tile with a near-black
- * border. Light treatment so mixed assets read on that fill.
- * OutreachPanda and Dibe Agency get slight optical-size tweaks
- * (thin / small / stacked marks).
- * Light theme: ownPlate icons (their own filled tile) keep their tones in
- * greyscale instead of being inverted; silhouette marks (one solid colour)
- * render black.
+ * Shown as a slow marquee of muted marks (see `.cal-logos` in globals.css).
+ * The assets are mixed, so each kind gets its own treatment:
+ * - ownPlate: the mark sits on its own filled tile; shown in greyscale.
+ * - silhouette: one solid colour on transparency (Codi's blue C); drawn in
+ *   the page ink so it reads on both themes.
+ * - knockout: a white mark on an opaque black square (Dibe); drawn as page
+ *   ink through a luminance mask, so only the mark shows.
+ * - everything else: a coloured wordmark, shown in greyscale.
+ * Hovering a mark brings back its own colours (silhouettes stay ink).
+ * OutreachPanda and Dibe Agency get slight optical-size tweaks.
  */
 const CUSTOMERS = [
   {
@@ -74,17 +78,18 @@ const CUSTOMERS = [
     src: "/customer-logos/dibe-agency.png",
     width: 208,
     height: 166,
+    knockout: true,
     size: "dibe" as const,
   },
 ] as const;
 
 const LOGO_SIZE = {
-  base: "h-8 md:h-9",
-  panda: "h-9 md:h-10",
-  dibe: "h-10 md:h-11",
+  base: "h-10 md:h-[3.25rem]",
+  panda: "h-11 md:h-14",
+  dibe: "h-12 md:h-[3.75rem]",
 } as const;
 
-function LogoLink({ customer }: { customer: (typeof CUSTOMERS)[number] }) {
+function LogoLink({ customer, hidden }: { customer: (typeof CUSTOMERS)[number]; hidden?: boolean }) {
   const sizeKey =
     "size" in customer && customer.size ? customer.size : ("base" as const);
 
@@ -94,20 +99,36 @@ function LogoLink({ customer }: { customer: (typeof CUSTOMERS)[number] }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Visit ${customer.name}`}
-      className="customer-logo-item inline-flex items-center justify-center outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--md-sys-color-primary)] md:min-w-0"
+      tabIndex={hidden ? -1 : undefined}
+      className="cal-logo-link"
     >
-      <Image
-        src={customer.src}
-        alt={`${customer.name} logo`}
-        width={customer.width}
-        height={customer.height}
-        unoptimized
-        draggable={false}
-        data-own-plate={"ownPlate" in customer ? "" : undefined}
-        data-silhouette={"silhouette" in customer ? "" : undefined}
-        className={`customer-logo-img block ${LOGO_SIZE[sizeKey]} w-auto object-contain object-center`}
-        style={{ width: "auto", maxWidth: "100%" }}
-      />
+      {"knockout" in customer ? (
+        // Page ink masked by the logo's luminance: the white mark shows, the
+        // black square drops out, on either theme.
+        <span
+          role="img"
+          aria-label={hidden ? undefined : `${customer.name} logo`}
+          className={`cal-logo-img cal-logo-knockout ${LOGO_SIZE[sizeKey]}`}
+          style={{
+            aspectRatio: `${customer.width} / ${customer.height}`,
+            maskImage: `url(${customer.src})`,
+            WebkitMaskImage: `url(${customer.src})`,
+          }}
+        />
+      ) : (
+        <Image
+          src={customer.src}
+          alt={hidden ? "" : `${customer.name} logo`}
+          width={customer.width}
+          height={customer.height}
+          unoptimized
+          draggable={false}
+          data-own-plate={"ownPlate" in customer ? "" : undefined}
+          data-silhouette={"silhouette" in customer ? "" : undefined}
+          className={`cal-logo-img block ${LOGO_SIZE[sizeKey]} w-auto object-contain object-center`}
+          style={{ width: "auto", maxWidth: "none" }}
+        />
+      )}
     </a>
   );
 }
@@ -118,24 +139,26 @@ export default function CustomerLogoWall({
   headingId?: string;
 } = {}) {
   return (
-    <section
-      aria-labelledby={headingId}
-      className="w-full min-w-0 py-10 md:py-14"
-    >
-      <div className="omentir-primary-width">
-        <p
-          id={headingId}
-          className="text-left text-sm font-normal text-[var(--md-sys-color-on-surface)]"
-        >
-          Teams using Omentir
-        </p>
+    <section aria-labelledby={headingId} className="cal-logos w-full min-w-0 py-12 md:py-16">
+      <p id={headingId} className="cal-logos-label omentir-primary-width">
+        Teams using Omentir
+      </p>
 
-        <div className="mt-8 grid grid-cols-4 gap-2 md:mt-10 md:flex md:flex-nowrap md:items-center md:justify-between">
-          {CUSTOMERS.map((customer) => (
-            <LogoLink key={customer.name} customer={customer} />
+      <Reveal className="cal-logos-viewport">
+        {/* The list is rendered twice so the strip can loop without a seam;
+            the second copy is hidden from assistive tech and the tab order. */}
+        <div className="cal-logos-track">
+          {[false, true].map((hidden) => (
+            <ul key={String(hidden)} className="cal-logos-set" aria-hidden={hidden || undefined}>
+              {CUSTOMERS.map((customer) => (
+                <li key={customer.name}>
+                  <LogoLink customer={customer} hidden={hidden} />
+                </li>
+              ))}
+            </ul>
           ))}
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

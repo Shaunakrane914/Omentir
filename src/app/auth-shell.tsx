@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import LogoMark from "./logo-mark";
 import OnboardingHeader from "./onboarding-header";
 
 export default function AuthShell({
@@ -7,12 +8,35 @@ export default function AuthShell({
   footer,
   top,
   wide = false,
+  marketing = false,
 }: {
   children: ReactNode;
   footer?: ReactNode;
   top?: ReactNode;
   wide?: boolean;
+  /** Login, signup and the SSO landing: marketing theme without the site
+   *  header, the form in a white card on a gradient panel. */
+  marketing?: boolean;
 }) {
+  if (marketing) {
+    return (
+      // No site header on login/signup, just the logo home. `cal-site` is the
+      // marker the header used to carry: it switches on the marketing theme.
+      <main className="site-theme cal-site cal-auth flex min-h-screen flex-col">
+        <div className="cal-auth-stage">
+          <Link href="/" className="cal-auth-logo" aria-label="Omentir home">
+            <LogoMark className="h-6 w-6" />
+            Omentir
+          </Link>
+          <div className="cal-auth-card">
+            <div className="cal-auth-form">{children}</div>
+          </div>
+        </div>
+        {footer ? <div className="cal-auth-footer">{footer}</div> : null}
+      </main>
+    );
+  }
+
   // Login and signup stay on the 360px form column. Onboarding (progress `top`)
   // and plan/upgrade (`wide`) use the same 48rem secondary column as help/blog.
   const secondary = Boolean(top) || wide;

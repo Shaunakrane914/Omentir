@@ -3,8 +3,8 @@ import FaqSplitSection from "../faq-split-section";
 import JsonLd from "../json-ld";
 import MarketingClosingCta from "../marketing-closing-cta";
 import {
-  ArticleCrumbs,
   articlePathCrumbs,
+  CalPageHero,
   MarketingFooter,
   MarketingHeader,
 } from "../marketing-shell";
@@ -84,49 +84,33 @@ export function ToolPageChrome({
       <JsonLd id={`${tool.slug}-jsonld`} data={jsonLd} />
       <MarketingHeader transparentAtTop />
       <div className="relative">
-        <section className="omentir-primary-width relative z-10 min-w-0 pt-28 md:pt-36">
-          <ArticleCrumbs
-            crumbs={articlePathCrumbs("tools", tool.slug)}
-            className="mb-8 justify-center"
-          />
-          <h1 className="hero-display-sentence mx-auto max-w-4xl text-center text-[var(--md-sys-color-on-surface)]">
-            {tool.title}
-          </h1>
-          <p className="hero-lede mx-auto mt-4 max-w-2xl text-center text-[var(--md-sys-color-on-surface-variant)] md:mt-5">
-            {tool.lede}
-          </p>
-          <div className="mt-10 md:mt-12">{children}</div>
-          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-6 text-[var(--md-sys-color-on-surface-variant)]">
+        {/* The tool itself sits in the cream hero panel, like the product
+            demo on the homepage. */}
+        <CalPageHero
+          crumbs={articlePathCrumbs("tools", tool.slug)}
+          title={tool.title}
+          description={tool.lede}
+        >
+          <div className="mt-10 w-full text-left md:mt-12">{children}</div>
+          <p className="mt-6 max-w-2xl text-sm leading-6 text-[var(--cal-muted)]">
             {tool.disclaimer}
           </p>
-        </section>
+        </CalPageHero>
         {tool.howItWorks ? <ToolHowItWorks steps={tool.howItWorks} /> : null}
         {tool.proTips ? <ToolProTips tips={tool.proTips} /> : null}
-        {tool.bodySections?.length ? (
-          <div className="omentir-primary-width relative z-10 min-w-0 space-y-12 pt-16 md:space-y-16 md:pt-20">
-            {tool.bodySections.map((section) => (
-              <section key={section.heading} className="mx-auto max-w-2xl">
-                <h2
-                  style={{ fontFamily: "var(--font-varta)" }}
-                  className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)] md:text-2xl"
-                >
-                  {section.heading}
-                </h2>
+        {tool.bodySections?.length || tool.relatedLinks?.length ? (
+          <div className="cal-read space-y-14 !pb-0 md:space-y-16">
+            {tool.bodySections?.map((section) => (
+              <section key={section.heading}>
+                <h2 className="cal-read-h2">{section.heading}</h2>
                 {section.paragraphs.map((paragraph) => (
-                  <p
-                    key={paragraph}
-                    className="mt-4 text-base leading-8 text-[var(--md-sys-color-on-surface-variant)]"
-                  >
+                  <p key={paragraph} className="mt-4 text-base leading-8 text-[var(--cal-muted)]">
                     {paragraph}
                   </p>
                 ))}
               </section>
             ))}
-          </div>
-        ) : null}
-        {tool.relatedLinks?.length ? (
-          <div className="omentir-primary-width relative z-10 mx-auto max-w-2xl min-w-0 pt-12 md:pt-16">
-            <RelatedLinks links={[...tool.relatedLinks]} />
+            {tool.relatedLinks?.length ? <RelatedLinks links={[...tool.relatedLinks]} /> : null}
           </div>
         ) : null}
         <div className="relative z-10 pb-16 pt-16 md:pb-24 md:pt-20">

@@ -150,7 +150,7 @@ export default function FindLeadsForm() {
             rows={6}
             maxLength={1500}
             placeholder="Example: We sell payroll software to construction companies in the US with 20 to 200 people. Buyers are owners and ops managers."
-            className="mt-2 w-full resize-y rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface)] px-4 py-3 text-base leading-6 text-[var(--md-sys-color-on-surface)] outline-none placeholder:text-[var(--md-sys-color-on-surface-variant)] focus:border-[var(--md-sys-color-outline)]"
+            className="site-input mt-2 w-full resize-y"
           />
         </label>
 
@@ -160,7 +160,7 @@ export default function FindLeadsForm() {
               key={example.label}
               type="button"
               onClick={() => setPrompt(example.prompt)}
-              className="rounded-full border border-[var(--md-sys-color-outline-variant)] px-3 py-1.5 text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] transition-colors hover:border-[var(--md-sys-color-outline)] hover:text-[var(--md-sys-color-on-surface)]"
+              className="cal-filter-pill border border-[var(--site-border)]"
             >
               {example.label}
             </button>
@@ -170,7 +170,7 @@ export default function FindLeadsForm() {
         <button
           type="submit"
           disabled={state.status === "loading" || prompt.trim().length < 20}
-          className="m3-btn m3-btn-filled mt-5 h-11 w-full cursor-pointer px-6 text-sm disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+          className="site-btn site-btn-primary mt-5 w-full disabled:cursor-wait sm:w-auto"
         >
           {state.status === "loading" ? "Searching public profiles..." : "Find 10 leads"}
         </button>
@@ -185,8 +185,8 @@ export default function FindLeadsForm() {
       {state.status === "ready" ? (
         <section className="mt-10" aria-live="polite">
           <h2
-            style={{ fontFamily: "var(--font-varta)" }}
-            className="text-xl font-semibold tracking-tight text-[var(--md-sys-color-on-surface)]"
+            style={{ fontFamily: "var(--font-cal-display)" }}
+            className="text-xl font-medium tracking-tight text-[var(--md-sys-color-on-surface)]"
           >
             10 people who might buy
           </h2>
@@ -204,7 +204,7 @@ export default function FindLeadsForm() {
             </p>
             <Link
               href="/signup"
-              className="m3-btn m3-btn-filled-secondary mt-5 inline-flex h-11 cursor-pointer px-6 text-sm"
+              className="site-btn site-btn-outline mt-5"
             >
               Create a free account
             </Link>

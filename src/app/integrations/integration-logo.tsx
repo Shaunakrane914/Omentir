@@ -68,3 +68,31 @@ export default function IntegrationLogo({
     </span>
   );
 }
+
+/** Marks drawn in their real brand color. Brands whose mark is black or
+ *  white (Cursor, Grok, MCP, Codex) and OpenClaw, which ships its own
+ *  colors, keep the default treatment. REST API is Omentir's own icon. */
+const BRAND_COLOR: Record<string, string> = {
+  claude: "#d97757",
+  "claude-code": "#d97757",
+  chatgpt: "#10a37f",
+  "rest-api": "var(--cal-blue)",
+};
+
+/** Marketing logo: the brand-colored mark (the single-color logo file used
+ *  as a mask over its brand color) or, for mono brands, the plain logo. */
+export function IntegrationMark({ slug }: { slug: string }) {
+  const color = BRAND_COLOR[slug];
+  if (!color) return <IntegrationLogo slug={slug} />;
+  const mask = `url(/integration-logos/${slug}.svg)`;
+  return (
+    <span className="grid h-12 w-12 place-items-center p-2.5">
+      <span
+        role="img"
+        aria-label={`${integrationName(slug)} logo`}
+        className="cal-brand-mark"
+        style={{ backgroundColor: color, maskImage: mask, WebkitMaskImage: mask }}
+      />
+    </span>
+  );
+}

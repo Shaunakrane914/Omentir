@@ -26,6 +26,7 @@ export default async function LoginPage({
   const returnTo = safeReturnPath(next);
   if (userId) redirect(returnTo);
   if (isLocalMode()) {
+    // Self-hosted: no marketing site to link to, so the plain shell.
     return (
       <AuthShell footer={<AuthLegalFooter />}>
         <LocalLoginForm
@@ -36,7 +37,7 @@ export default async function LoginPage({
     );
   }
   return (
-    <AuthShell footer={<AuthLegalFooter />}>
+    <AuthShell marketing footer={<AuthLegalFooter />}>
       <AuthChoice primary="login" loginReturnUrl={returnTo} />
     </AuthShell>
   );
