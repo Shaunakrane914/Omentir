@@ -22,7 +22,7 @@ const INTEGRATION_LOGOS: Record<
     preserveColor: true,
   },
   "openai-dots": {
-    src: "/integration-logos/openai-dots.svg",
+    src: "/integration-logos/openai-dots.png",
     name: "OpenAI Dots",
     preserveColor: true,
   },

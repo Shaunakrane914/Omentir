@@ -137,7 +137,7 @@ export const COMPARISON_BRANDS: Record<string, ComparisonBrand> = {
   "openai-dots": {
     id: "openai-dots",
     name: "OpenAI Dots",
-    src: "/integration-logos/openai-dots.svg",
+    src: "/integration-logos/openai-dots.png",
     bleed: true,
   },
   "manus-cue": {

@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="OpenAI Dots">
-  <!-- The ring mark from openai.com/index/introducing-dots, flattened from the page's animated canvas. -->
-  <rect width="512" height="512" rx="114" fill="#000000"/>
-  <path fill="#C9CBDD" fill-rule="evenodd" d="M256 106a150 150 0 1 1 0 300a150 150 0 1 1 0-300Zm0 100a50 50 0 1 0 0 100a50 50 0 1 0 0-100Z"/>
-</svg>
