@@ -9130,7 +9130,7 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
 
 /* Type scale: medium weight, tight tracking, navy ink. */
 :root:has(.cal-site) .cal-h1 {
-  max-width: 56rem;
+  max-width: 60rem;
   margin-inline: auto;
   font-family: var(--font-cal-display);
   font-size: clamp(2.5rem, 6vw, 4.5rem);
@@ -9236,7 +9236,7 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
 /* Hero: cream panel inset from the viewport edges. */
 .cal-hero {
   margin: 0 8px;
-  padding: 8.5rem 16px 16px;
+  padding: 9.5rem 16px 16px;
   border-radius: 28px;
   background: var(--cal-hero);
 }
@@ -9244,7 +9244,7 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
 @media (min-width: 768px) {
   .cal-hero {
     margin: 0 12px;
-    padding: 10rem 32px 32px;
+    padding: 11rem 32px 32px;
     border-radius: 32px;
   }
 }
@@ -9256,9 +9256,15 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
   text-align: center;
 }
 
-.cal-hero-cta > div {
+.cal-hero-copy .cal-lead {
+  margin-top: 1.8rem;
+}
+
+/* :root:has(.cal-site) outranks the body-wide `.app-compact [class~="mt-6"]`
+   squeeze, which otherwise halves this gap. */
+:root:has(.cal-site) .cal-hero-cta > div {
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 2.4rem;
 }
 
 /* Product stage: gradient field, icon tabs, white card. The gradient is one
@@ -9267,7 +9273,7 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
   position: relative;
   isolation: isolate;
   max-width: 76rem;
-  margin: 3.5rem auto 0;
+  margin: 4.2rem auto 0;
   overflow: hidden;
   border-radius: 24px;
   background: var(--cal-blue-soft);
@@ -9275,7 +9281,7 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
 
 @media (min-width: 768px) {
   .cal-stage {
-    margin-top: 4.5rem;
+    margin-top: 5.4rem;
     border-radius: 32px;
   }
 }
@@ -9336,8 +9342,8 @@ html.dark:has(.dashboard-shell) :is(input:not([type="checkbox"]):not([type="radi
 .cal-stage-track.is-scrub {
   height: calc(100vh + 560px + 4 * 70vh);
   /* The pin centers a ~608px stage in 100vh; pull the track up by the empty
-     band above it so the resting stage sits 3.5rem under the hero copy. */
-  margin-top: calc(3.5rem - (100vh - 608px) / 2);
+     band above it so the resting stage sits 6rem under the hero copy. */
+  margin-top: calc(6rem - (100vh - 608px) / 2);
 }
 
 .is-scrub .cal-stage-pin {
