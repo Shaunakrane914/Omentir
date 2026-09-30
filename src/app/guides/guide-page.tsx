@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import FaqSplitSection from "../faq-split-section";
+import { agentPasteTarget } from "../agent-paste-target";
 import { PromptCopyBox } from "../grok-bot-setup-block";
 import JsonLd from "../json-ld";
 import MarketingClosingCta from "../marketing-closing-cta";
@@ -51,6 +52,8 @@ function renderInline(text: string): ReactNode[] {
 }
 
 function pasteLabelFor(slug: string) {
+  const agent = agentPasteTarget(slug);
+  if (agent) return `Paste into ${agent}`;
   if (slug.startsWith("claude-code")) return "Paste into Claude Code";
   if (slug.startsWith("claude-chat")) return "Paste into Claude";
   if (slug.startsWith("cursor")) return "Paste into Cursor";

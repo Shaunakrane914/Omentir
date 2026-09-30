@@ -35,8 +35,15 @@ const INTEGRATION_LOGOS: Record<
   },
 };
 
+/** Integrations that have a page but no logo file yet. */
+const INTEGRATION_NAMES: Record<string, string> = {
+  "meta-muse": "Meta Muse",
+  "openai-dots": "OpenAI Dots",
+  "manus-cue": "Manus Cue",
+};
+
 export function integrationName(slug: string) {
-  return INTEGRATION_LOGOS[slug]?.name ?? slug;
+  return INTEGRATION_LOGOS[slug]?.name ?? INTEGRATION_NAMES[slug] ?? slug;
 }
 
 export default function IntegrationLogo({

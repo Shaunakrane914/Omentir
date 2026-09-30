@@ -7,6 +7,10 @@ export const client = createClient({
   apiVersion,
   useCdn: false,
   token: readToken || undefined,
-  perspective: "published",
+  // Local draft preview: SANITY_PREVIEW_DRAFTS=1 in .env.local. Ignored in production builds.
+  perspective:
+    process.env.NODE_ENV !== "production" && process.env.SANITY_PREVIEW_DRAFTS === "1"
+      ? "drafts"
+      : "published",
   stega: false,
 });

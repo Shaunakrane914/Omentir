@@ -16,7 +16,8 @@ import {
   createWebPageJsonLd,
   siteUrl,
 } from "../seo";
-import GrokBotSetupBlock from "../grok-bot-setup-block";
+import { agentPasteTarget } from "../agent-paste-target";
+import GrokBotSetupBlock, { PromptCopyBox } from "../grok-bot-setup-block";
 import { MarkdownTwinLink } from "../seo-content/shared";
 import SquircleIcon from "../squircle-icon";
 import { CLUSTER_ICON, HELP_CLUSTER_LABELS, type HelpPage } from "./types";
@@ -102,8 +103,17 @@ export default function HelpArticle({ page }: { page: HelpPage }) {
 
           {page.prompt ? (
             <section id="paste-prompt" className="mt-12 md:mt-16">
-              <h2 className="cal-read-h2">Paste this into Grok Bot</h2>
-              <GrokBotSetupBlock prompt={page.prompt} />
+              <h2 className="cal-read-h2">
+                Paste this into {agentPasteTarget(page.slug) ?? "Grok Bot"}
+              </h2>
+              {agentPasteTarget(page.slug) ? (
+                <PromptCopyBox
+                  prompt={page.prompt}
+                  label={`Paste into ${agentPasteTarget(page.slug)}`}
+                />
+              ) : (
+                <GrokBotSetupBlock prompt={page.prompt} />
+              )}
             </section>
           ) : null}
 

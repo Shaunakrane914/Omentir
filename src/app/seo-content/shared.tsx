@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { agentPasteTarget } from "../agent-paste-target";
 import { PromptCopyBox } from "../grok-bot-setup-block";
 import { linkifyProducts, linkifySeoCopy } from "./product-links";
 import type { SeoContentPage, SeoFamily, SeoRelatedLink } from "./types";
@@ -394,6 +395,9 @@ export function SectionProse({
             paragraphs={section.paragraphs}
             bullets={section.bullets}
             code={section.code}
+            codeLabel={
+              agentPasteTarget(page.slug) && `Paste into ${agentPasteTarget(page.slug)}`
+            }
           />
         ))}
     </>
@@ -408,12 +412,14 @@ export function SectionBody({
   paragraphs,
   bullets,
   code,
+  codeLabel,
   className = "",
 }: {
   id: string;
   paragraphs: string[];
   bullets?: string[];
   code?: string;
+  codeLabel?: string;
   className?: string;
 }) {
   const seen = new Set<string>();
@@ -429,7 +435,9 @@ export function SectionBody({
           ))}
         </ul>
       ) : null}
-      {code ? <PromptCopyBox prompt={code} /> : null}
+      {code ? (
+        codeLabel ? <PromptCopyBox prompt={code} label={codeLabel} /> : <PromptCopyBox prompt={code} />
+      ) : null}
     </div>
   );
 }
@@ -440,12 +448,14 @@ export function ArticleSection({
   paragraphs,
   bullets,
   code,
+  codeLabel,
 }: {
   id: string;
   heading: string;
   paragraphs: string[];
   bullets?: string[];
   code?: string;
+  codeLabel?: string;
 }) {
   return (
     <section id={id} className="scroll-mt-28">
@@ -455,6 +465,7 @@ export function ArticleSection({
         paragraphs={paragraphs}
         bullets={bullets}
         code={code}
+        codeLabel={codeLabel}
         className="mt-5 text-base leading-8 text-[var(--md-sys-color-on-surface)]"
       />
     </section>

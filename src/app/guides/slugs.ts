@@ -12,6 +12,20 @@ export const GUIDE_SLUGS = [
   "claude-chat-sales-outreach",
   "grok-chat-sales-outreach",
   "openclaw-sales-outreach",
+  "meta-muse-sales-outreach",
+  "meta-muse-lead-generation",
+  "meta-muse-cold-messages",
+  "meta-muse-follow-up-messages",
+  "meta-muse-account-research",
+  "openai-dots-sales-outreach",
+  "openai-dots-lead-generation",
+  "openai-dots-cold-messages",
+  "openai-dots-follow-up-messages",
+  "openai-dots-pipeline-watch",
+  "manus-cue-sales-outreach",
+  "manus-cue-lead-generation",
+  "manus-cue-meeting-prep",
+  "manus-cue-follow-up-messages",
 ] as const;
 
 export const GUIDE_PATHS = new Set(GUIDE_SLUGS.map((slug) => `/${slug}`));
