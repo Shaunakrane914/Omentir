@@ -1,7 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { SITE_THEME_STORAGE_KEY as STORAGE_KEY } from "./site-theme-script";
+import {
+  SITE_THEME_STORAGE_KEY as STORAGE_KEY,
+  defaultThemeFor,
+  resolveSiteTheme,
+} from "./site-theme-script";
 
 type Preference = "system" | "light" | "dark";
 
@@ -14,22 +18,22 @@ function subscribe(listener: () => void) {
   };
 }
 
+/** With nothing stored, the page's own default (light on the site, dark in
+ *  the app) shows as selected. */
 function readPreference(): Preference {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
-    return value === "light" || value === "dark" ? value : "system";
-  } catch {
-    return "system";
-  }
+    if (value === "light" || value === "dark" || value === "system") return value;
+  } catch {}
+  return defaultThemeFor(window.location.pathname);
 }
 
 function applyPreference(preference: Preference) {
-  const resolved =
-    preference === "system"
-      ? window.matchMedia("(prefers-color-scheme: light)").matches
-        ? "light"
-        : "dark"
-      : preference;
+  const resolved = resolveSiteTheme(
+    preference,
+    window.location.pathname,
+    window.matchMedia("(prefers-color-scheme: light)").matches,
+  );
   const root = document.documentElement;
   root.setAttribute("data-site-theme", resolved);
   // <html> carries an inline `color-scheme: dark`; native controls and
@@ -39,8 +43,7 @@ function applyPreference(preference: Preference) {
 
 function setPreference(preference: Preference) {
   try {
-    if (preference === "system") localStorage.removeItem(STORAGE_KEY);
-    else localStorage.setItem(STORAGE_KEY, preference);
+    localStorage.setItem(STORAGE_KEY, preference);
   } catch {}
   applyPreference(preference);
   listeners.forEach((listener) => listener());

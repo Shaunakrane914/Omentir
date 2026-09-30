@@ -93,6 +93,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: "/:path*",
+        has: [{ type: "host" as const, value: "www.omentir.com" }],
+        destination: "https://omentir.com/:path*",
+        permanent: true,
+      },
       { source: "/dashboard", destination: "/overview", permanent: true },
       { source: "/my-product", destination: "/workspace", permanent: true },
       { source: "/my-product/:path*", destination: "/workspace/:path*", permanent: true },

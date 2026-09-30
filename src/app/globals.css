@@ -3016,7 +3016,7 @@ html.marketing-menu-open [data-marketing-header] {
   background: #1a1a1a;
 }
 
-.home-mock-app.is-live .home-mock-people li:focus-visible {
+.home-mock-app.is-live .home-mock-people li:focus-within {
   outline: 1px solid rgba(194, 208, 170, 0.55);
   outline-offset: -1px;
 }
@@ -3034,7 +3034,7 @@ html.marketing-menu-open [data-marketing-header] {
   background: #1a1a1a;
 }
 
-.home-mock-app.is-live .home-mock-threads li:focus-visible {
+.home-mock-app.is-live .home-mock-threads li:focus-within {
   outline: 1px solid rgba(194, 208, 170, 0.55);
   outline-offset: -1px;
 }
@@ -3918,12 +3918,23 @@ html.marketing-menu-open [data-marketing-header] {
 
 .home-mock-people li,
 .home-mock-threads li {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid #1c1c1c;
+}
+
+.home-mock-pick {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 .home-mock-people li {

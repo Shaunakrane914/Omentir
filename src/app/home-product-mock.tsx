@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import LogoMark from "./logo-mark";
 
@@ -449,13 +449,6 @@ function BackButton({ label, onClick }: { label: string; onClick: () => void }) 
   );
 }
 
-function pickLeadKey(event: KeyboardEvent<HTMLLIElement>, pick: () => void) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    pick();
-  }
-}
-
 export function MockLeadsScreen({
   filters = false,
   funnel = false,
@@ -500,13 +493,16 @@ export function MockLeadsScreen({
               <li
                 key={lead.name}
                 className={on ? "is-on" : lead.status === "Low fit" ? "is-dim" : undefined}
-                role={pick ? "button" : undefined}
-                tabIndex={pick ? 0 : undefined}
-                aria-pressed={pick ? on : undefined}
-                aria-label={pick ? `${lead.name}, ${lead.title}` : undefined}
-                onClick={pick}
-                onKeyDown={pick ? (event) => pickLeadKey(event, pick) : undefined}
               >
+                {pick ? (
+                  <button
+                    type="button"
+                    className="home-mock-pick"
+                    aria-pressed={on}
+                    aria-label={`${lead.name}, ${lead.title}`}
+                    onClick={pick}
+                  />
+                ) : null}
                 <Face name={lead.name} />
                 <span>
                   <strong>
@@ -640,17 +636,16 @@ function InboxBody({
                   <li
                     key={thread.name}
                     className={on ? "is-on" : undefined}
-                    role={pick ? "button" : undefined}
-                    tabIndex={pick ? 0 : undefined}
-                    aria-pressed={pick ? on : undefined}
-                    aria-label={
-                      pick
-                        ? `${thread.name}, ${thread.title}${thread.booked ? ", meeting booked" : ""}`
-                        : undefined
-                    }
-                    onClick={pick}
-                    onKeyDown={pick ? (event) => pickLeadKey(event, pick) : undefined}
                   >
+                    {pick ? (
+                      <button
+                        type="button"
+                        className="home-mock-pick"
+                        aria-pressed={on}
+                        aria-label={`${thread.name}, ${thread.title}${thread.booked ? ", meeting booked" : ""}`}
+                        onClick={pick}
+                      />
+                    ) : null}
                     <Face name={thread.name} />
                     <span>
                       <strong>

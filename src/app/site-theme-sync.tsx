@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { SITE_THEME_STORAGE_KEY } from "./site-theme-script";
+import { usePathname } from "next/navigation";
+import { SITE_THEME_STORAGE_KEY, resolveSiteTheme } from "./site-theme-script";
 
-/** Re-applies the light/dark preference after mount. The <head> script
- *  normally sets data-site-theme before paint, but when React renders the
- *  root layout on the client (the 404 does) that inline script never runs
- *  and <html> loses the attribute, so the page fell back to dark. */
+/** Re-applies the light/dark preference after mount and on every route
+ *  change. The <head> script only runs on the first document load, so a
+ *  client-side hop from the site (light by default) into the app (dark by
+ *  default) needs this. It also covers the 404, where React renders the
+ *  root layout on the client and the inline script never runs. */
 export default function SiteThemeSync() {
+  const pathname = usePathname();
   useEffect(() => {
     const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: light)");
@@ -16,15 +19,15 @@ export default function SiteThemeSync() {
       try {
         saved = localStorage.getItem(SITE_THEME_STORAGE_KEY);
       } catch {
-        // Storage blocked: follow the OS.
+        // Storage blocked: use the route default.
       }
-      const theme = saved === "light" || saved === "dark" ? saved : media.matches ? "light" : "dark";
+      const theme = resolveSiteTheme(saved, window.location.pathname, media.matches);
       root.setAttribute("data-site-theme", theme);
       root.style.colorScheme = theme;
     };
-    if (!root.hasAttribute("data-site-theme")) apply();
+    apply();
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
-  }, []);
+  }, [pathname]);
   return null;
 }

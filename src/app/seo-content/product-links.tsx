@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { splitMarkdownLinks } from "@/lib/cms/markdown-links";
+import { marketingLinkRel } from "@/lib/marketing-link-rel";
 
 /**
  * Official homepages for third-party products we name on marketing pages.
@@ -237,7 +238,7 @@ export function ProductHomeLink({
   const href = productHref(name);
   if (!href) return <>{children ?? name}</>;
   return (
-    <a href={href} target="_blank" rel="noopener" className={className}>
+    <a href={href} target="_blank" rel={marketingLinkRel(href)} className={className}>
       {children ?? name}
     </a>
   );
@@ -271,7 +272,7 @@ export function linkifySeoCopy(text: string, seen?: Set<string>): ReactNode {
         key={`a${index}`}
         href={part.href}
         target="_blank"
-        rel="noopener"
+        rel={marketingLinkRel(part.href)}
         className={PRODUCT_LINK_CLASS}
       >
         {part.text}
@@ -307,7 +308,7 @@ export function linkifyProducts(text: string, seen?: Set<string>): ReactNode {
           key={`${product.id}-${index}`}
           href={product.href}
           target="_blank"
-          rel="noopener"
+          rel={marketingLinkRel(product.href)}
           className={PRODUCT_LINK_CLASS}
         >
           {raw}

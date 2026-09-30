@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 function isBlogLive(blog: { publishedDate: string }, now: Date = new Date()) {
   const published = new Date(`${blog.publishedDate} UTC`);
-  if (Number.isNaN(published.getTime())) return true;
+  if (Number.isNaN(published.getTime())) return false;
   return published.getTime() <= now.getTime();
 }
 

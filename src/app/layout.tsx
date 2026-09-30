@@ -29,18 +29,17 @@ const geistMono = localFont({
   src: "./fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
   weight: "100 900",
+  preload: false,
 });
 
-/* Marketing display faces, free stand-ins for the reference layout's custom
-   fonts: Inter Tight for display headings, Newsreader for serif accents.
-   Not preloaded: only marketing pages use them, and the browser fetches a
-   face only once a rendered element asks for it, so app routes never load
-   these files. */
+/* Inter Tight is used by the homepage's LCP heading and app page titles.
+   Preload it so the heading does not wait for CSS discovery. Newsreader
+   remains demand-loaded for serif accents. */
 const displayFont = localFont({
   src: "./fonts/inter-tight-latin.woff2",
   variable: "--font-cal-display",
   weight: "400 700",
-  preload: false,
+  preload: true,
   fallback: ["Helvetica Neue", "Arial", "sans-serif"],
 });
 
