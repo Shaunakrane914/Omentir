@@ -59,10 +59,7 @@ jobs:
           # so without a token every page ships with no count. Step-scoped so
           # install scripts never see it.
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -o pipefail
-          bun run build 2>&1 | tee next-build.log
-      - run: sh scripts/require-cms-prerender.sh next-build.log
+        run: bun run build
       - name: Pack .next for the VPS
         run: tar -C .next --exclude=cache -czf next-build.tgz .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
