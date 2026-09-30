@@ -16,6 +16,21 @@ const INTEGRATION_LOGOS: Record<
     name: "Grok Bot",
     preserveColor: true,
   },
+  "meta-muse": {
+    src: "/integration-logos/meta-muse.png",
+    name: "Meta Muse",
+    preserveColor: true,
+  },
+  "openai-dots": {
+    src: "/integration-logos/openai-dots.svg",
+    name: "OpenAI Dots",
+    preserveColor: true,
+  },
+  "manus-cue": {
+    src: "/integration-logos/manus-cue.png",
+    name: "Manus Cue",
+    preserveColor: true,
+  },
   openclaw: {
     src: "/integration-logos/openclaw.svg",
     name: "OpenClaw",
@@ -35,15 +50,8 @@ const INTEGRATION_LOGOS: Record<
   },
 };
 
-/** Integrations that have a page but no logo file yet. */
-const INTEGRATION_NAMES: Record<string, string> = {
-  "meta-muse": "Meta Muse",
-  "openai-dots": "OpenAI Dots",
-  "manus-cue": "Manus Cue",
-};
-
 export function integrationName(slug: string) {
-  return INTEGRATION_LOGOS[slug]?.name ?? INTEGRATION_NAMES[slug] ?? slug;
+  return INTEGRATION_LOGOS[slug]?.name ?? slug;
 }
 
 export default function IntegrationLogo({

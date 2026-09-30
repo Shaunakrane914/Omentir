@@ -128,6 +128,24 @@ export const COMPARISON_BRANDS: Record<string, ComparisonBrand> = {
     src: "/integration-logos/grok-bot.svg",
     bleed: true,
   },
+  "meta-muse": {
+    id: "meta-muse",
+    name: "Meta Muse",
+    src: "/integration-logos/meta-muse.png",
+    bleed: true,
+  },
+  "openai-dots": {
+    id: "openai-dots",
+    name: "OpenAI Dots",
+    src: "/integration-logos/openai-dots.svg",
+    bleed: true,
+  },
+  "manus-cue": {
+    id: "manus-cue",
+    name: "Manus Cue",
+    src: "/integration-logos/manus-cue.png",
+    bleed: true,
+  },
   grok: {
     id: "grok",
     name: "Grok",
