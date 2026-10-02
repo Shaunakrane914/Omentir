@@ -3,10 +3,11 @@ import { liveSeoPages, type SeoCatalogEntry, type SeoContentPage } from "@/app/s
 import { defaultDescription, siteUrl } from "@/app/seo";
 import { getBlogs, getGuides, getHelpPages, getSeoPages, isBlogLive } from "@/lib/cms";
 
-// Rebuilt daily rather than pinned at build time: both blog sections are
-// filtered to released posts, so a permanently static copy could drift from
-// the public library.
-export const revalidate = 86400;
+// Rebuilt every five minutes rather than pinned at build time: both blog
+// sections are filtered to released posts, so a permanently static copy could
+// drift from the public library. Five minutes matches the CMS data cache, so a
+// Sanity publish shows up even when the publish webhook doesn't fire.
+export const revalidate = 300;
 
 // Curated first-read guides. The complete released library lives under
 // Optional so spec-aware agents can skip it when they need a short context.

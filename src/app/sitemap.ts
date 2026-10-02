@@ -11,7 +11,9 @@ import {
   isBlogLive,
 } from "@/lib/cms";
 
-export const revalidate = 86400;
+// Five minutes, matching the CMS data cache, so a Sanity publish shows up here
+// even when the publish webhook doesn't fire.
+export const revalidate = 300;
 
 const publicRoutes = [
   { path: "/", changeFrequency: "weekly", priority: 1.0, lastModified: "2026-08-17" },

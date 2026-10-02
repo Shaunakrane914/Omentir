@@ -101,12 +101,18 @@ export function RoundupList({ items }: { items: SeoRoundupItem[] }) {
   );
 }
 
-export function ThreadPreview({ lines }: { lines: SeoThreadLine[] }) {
+export function ThreadPreview({
+  lines,
+  label = "A reply thread, not a sequence",
+}: {
+  lines: SeoThreadLine[];
+  label?: string;
+}) {
   if (lines.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-[24px] bg-[var(--cal-surface)] shadow-[var(--cal-shadow)]">
       <p className="border-b border-[var(--site-border)] px-5 py-3 text-sm font-medium text-[var(--cal-muted)]">
-        A reply thread, not a sequence
+        {label}
       </p>
       <ol className="space-y-3 p-5">
         {lines.map((line, index) => {

@@ -1,6 +1,6 @@
 import type { PortableTextBlock } from "@portabletext/types";
 import { HELP_CLUSTER_ORDER, type HelpCluster, type HelpPage } from "@/app/help/types";
-import type { GuideCluster } from "@/app/guides/types";
+import type { GuideCluster, GuideContrast } from "@/app/guides/types";
 import type {
   SeoComparisonTable,
   SeoFamily,
@@ -367,6 +367,25 @@ export function withHelpRelated(
   }));
 }
 
+/** A guide table whose rows don't match its headers would render shifted cells, so drop it. */
+function mapGuideTable(value: unknown): SeoComparisonTable | undefined {
+  const table = mapTable(value);
+  if (!table) return undefined;
+  const width = table.headers.length;
+  return table.rows.every((row) => row.cells.length === width) ? table : undefined;
+}
+
+function mapContrast(value: unknown): GuideContrast | undefined {
+  const row = asRecord(value);
+  if (!row) return undefined;
+  const badLabel = text(row.badLabel);
+  const goodLabel = text(row.goodLabel);
+  const bad = strings(row.bad);
+  const good = strings(row.good);
+  if (!badLabel || !goodLabel || !bad.length || !good.length) return undefined;
+  return { badLabel, bad, goodLabel, good };
+}
+
 export function mapGuide(value: unknown): CmsGuidePage | null {
   const row = asRecord(value);
   if (!row) return null;
@@ -398,6 +417,11 @@ export function mapGuide(value: unknown): CmsGuidePage | null {
             paragraphs,
             bullets: bullets.length ? bullets : undefined,
             code: optionalText(section.code),
+            table: mapGuideTable(section.table),
+            steps: mapPhases(section.steps),
+            thread: mapThread(section.thread),
+            contrast: mapContrast(section.contrast),
+            callout: optionalText(section.callout),
           };
         })
         .filter((item): item is NonNullable<typeof item> => Boolean(item))
@@ -412,6 +436,7 @@ export function mapGuide(value: unknown): CmsGuidePage | null {
     publishedDate,
     updatedDate: text(row.updatedDate, publishedDate),
     keywords: strings(row.keywords),
+    answer: optionalText(row.answer),
     sections,
     faqItems: mapFaq(row.faqItems),
     related: mapRelated(row.related),

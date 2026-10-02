@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { isSeoPageLive } from "@/app/seo-content/types";
 import { isBlogLive } from "./index";
-import { mapBlogListItem, mapHelpDraft, mapSeoPage, withHelpRelated } from "./mappers";
+import { mapBlogListItem, mapGuide, mapHelpDraft, mapSeoPage, withHelpRelated } from "./mappers";
 import { isHostLinkLabel, sameSitePath, splitMarkdownLinks } from "./markdown-links";
 import { markdownToPortableText } from "./markdown-to-portable-text";
 import { portableTextToMarkdown } from "./portable-text-markdown";
@@ -128,6 +128,74 @@ describe("CMS mappers", () => {
     expect(sanityImageUrl("/find-your-next-10-customers-banner.avif")).toBeUndefined();
   });
 });
+describe("guide visual blocks", () => {
+  const base = {
+    slug: "meta-muse-vs-chatgpt-agent-for-sales",
+    title: "Meta Muse vs ChatGPT agent",
+    description: "Which one to use.",
+    cluster: "linkedin",
+    publishedDate: "October 2, 2026",
+    answer: "Muse for research on your phone.",
+  };
+
+  test("keeps a comparison table and steps so a comparison guide shows its grid instead of losing the data", () => {
+    const page = mapGuide({
+      ...base,
+      sections: [
+        {
+          heading: "Side by side",
+          paragraphs: ["Both can draft."],
+          table: {
+            headers: ["Meta Muse", "ChatGPT"],
+            rows: [{ dimension: "Runs overnight", cells: ["Yes", "No"] }],
+          },
+          steps: [{ title: "Connect", detail: "Add the key." }],
+          contrast: { badLabel: "Weak", bad: ["Find me leads"], goodLabel: "Strong", good: ["Heads of sales in Texas"] },
+          callout: "Never give the agent your LinkedIn login.",
+        },
+      ],
+    });
+    const section = page?.sections[0];
+    expect(page?.answer).toBe("Muse for research on your phone.");
+    expect(section?.table?.rows[0]?.cells).toEqual(["Yes", "No"]);
+    expect(section?.steps).toEqual([{ title: "Connect", detail: "Add the key." }]);
+    expect(section?.contrast?.good).toEqual(["Heads of sales in Texas"]);
+    expect(section?.callout).toBe("Never give the agent your LinkedIn login.");
+  });
+
+  test("drops a table whose rows don't match the headers so cells never land under the wrong product", () => {
+    const page = mapGuide({
+      ...base,
+      sections: [
+        {
+          heading: "Side by side",
+          paragraphs: ["Both can draft."],
+          table: {
+            headers: ["Meta Muse", "ChatGPT", "Claude"],
+            rows: [{ dimension: "Runs overnight", cells: ["Yes", "No"] }],
+          },
+        },
+      ],
+    });
+    expect(page?.sections[0]?.table).toBeUndefined();
+    expect(page?.sections[0]?.paragraphs).toEqual(["Both can draft."]);
+  });
+
+  test("drops a one-sided contrast so the page never shows a 'weak' column with nothing to compare against", () => {
+    const page = mapGuide({
+      ...base,
+      sections: [
+        {
+          heading: "Prompts",
+          paragraphs: ["Be specific."],
+          contrast: { badLabel: "Weak", bad: ["Find me leads"], goodLabel: "Strong", good: [] },
+        },
+      ],
+    });
+    expect(page?.sections[0]?.contrast).toBeUndefined();
+  });
+});
+
 describe("blog portable text roundtrip", () => {
   test("keeps a heading and a link so migrated posts still have jump targets and internal links", () => {
     const markdown = "## Defining the boundary\n\nRead [account safety](/features/linkedin-account-safety).";

@@ -10,7 +10,9 @@ import {
 import { defaultDescription, siteUrl } from "@/app/seo";
 import { getBlogs, getGuides, getHelpPages, getSeoPages, isBlogLive } from "@/lib/cms";
 
-export const revalidate = 86400;
+// Five minutes, matching the CMS data cache, so a Sanity publish shows up here
+// even when the publish webhook doesn't fire.
+export const revalidate = 300;
 
 export async function GET() {
   const [allBlogs, features, useCases, comparisons, alternatives, integrations, guides, help] =

@@ -1,4 +1,14 @@
+import type { SeoComparisonTable, SeoPhase, SeoThreadLine } from "../seo-content/types";
+
 export type GuideCluster = "linkedin" | "b2b" | "email" | "general";
+
+/** Side-by-side "weak vs strong" lists. */
+export type GuideContrast = {
+  badLabel: string;
+  bad: string[];
+  goodLabel: string;
+  good: string[];
+};
 
 export type GuideFaq = {
   question: string;
@@ -11,6 +21,15 @@ export type GuideSection = {
   bullets?: string[];
   /** Paste-ready prompt or other monospaced job spec. */
   code?: string;
+  /** Rows compared across columns. Headers name the value columns. */
+  table?: SeoComparisonTable;
+  /** Numbered steps on a vertical rail. */
+  steps?: SeoPhase[];
+  /** Chat bubbles: what you send, what they say, drafts to approve. */
+  thread?: SeoThreadLine[];
+  contrast?: GuideContrast;
+  /** One highlighted rule or warning. */
+  callout?: string;
 };
 
 export type GuideRelated = {
@@ -28,6 +47,8 @@ export type GuidePage = {
   publishedDate: string;
   updatedDate: string;
   keywords: string[];
+  /** Short answer shown in a box above the sections. */
+  answer?: string;
   sections: GuideSection[];
   faqItems: GuideFaq[];
   related?: GuideRelated[];
