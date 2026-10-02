@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import FaqSplitSection from "../faq-split-section";
 import { agentPasteTarget } from "../agent-paste-target";
 import { PromptCopyBox } from "../grok-bot-setup-block";
@@ -16,40 +15,18 @@ import {
   createWebPageJsonLd,
   siteUrl,
 } from "../seo";
+import { ThreadPreview, TimelineWeeks } from "../seo-content/layouts";
+import {
+  GuideAnswer,
+  GuideCallout,
+  GuideContents,
+  GuideContrastCards,
+  GuideTable,
+  renderInline,
+  sectionIds,
+} from "./guide-visuals";
 import { LandingSection, RelatedCards } from "./landing-kit";
 import { type GuidePage } from "./types";
-
-function renderInline(text: string): ReactNode[] {
-  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
-  return parts.map((part, index) => {
-    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (!match) return <span key={index}>{part}</span>;
-    const href = match[2];
-    const external = href.startsWith("http://") || href.startsWith("https://");
-    if (external) {
-      return (
-        <a
-          key={index}
-          href={href}
-          target="_blank"
-          rel="noopener"
-          className="font-medium text-[var(--md-sys-color-primary)] underline decoration-[var(--md-sys-color-primary)]/30 underline-offset-4 hover:text-[var(--md-sys-color-on-surface)]"
-        >
-          {match[1]}
-        </a>
-      );
-    }
-    return (
-      <Link
-        key={index}
-        href={href}
-        className="font-medium text-[var(--md-sys-color-primary)] underline decoration-[var(--md-sys-color-primary)]/30 underline-offset-4 hover:text-[var(--md-sys-color-on-surface)]"
-      >
-        {match[1]}
-      </Link>
-    );
-  });
-}
 
 function pasteLabelFor(slug: string) {
   const agent = agentPasteTarget(slug);
@@ -68,10 +45,25 @@ function pasteLabelFor(slug: string) {
 }
 
 function DefaultGuideBody({ page }: { page: GuidePage }) {
+  const ids = sectionIds(page.sections.map((section) => section.heading));
+  const showContents = page.sections.length >= 4;
   return (
     <div className="omentir-moderate-width min-w-0 space-y-16 pb-8 md:space-y-24 md:pb-12">
-      {page.sections.map((section) => (
-        <LandingSection key={section.heading} title={section.heading}>
+      {page.answer || showContents ? (
+        <div className="max-w-3xl space-y-6 pt-10 md:pt-14">
+          {page.answer ? <GuideAnswer text={page.answer} /> : null}
+          {showContents ? (
+            <GuideContents
+              items={page.sections.map((section, index) => ({
+                id: ids[index]!,
+                label: section.heading,
+              }))}
+            />
+          ) : null}
+        </div>
+      ) : null}
+      {page.sections.map((section, index) => (
+        <LandingSection key={ids[index]} id={ids[index]} title={section.heading}>
           <div className="space-y-5">
             {section.paragraphs.map((paragraph) => (
               <p
@@ -88,6 +80,31 @@ function DefaultGuideBody({ page }: { page: GuidePage }) {
                 <li key={item}>{renderInline(item)}</li>
               ))}
             </ul>
+          ) : null}
+          {section.steps?.length ? (
+            <div className="mt-8 max-w-2xl">
+              <TimelineWeeks phases={section.steps} />
+            </div>
+          ) : null}
+          {section.table ? (
+            <div className="mt-8">
+              <GuideTable table={section.table} />
+            </div>
+          ) : null}
+          {section.contrast ? (
+            <div className="mt-8 max-w-3xl">
+              <GuideContrastCards contrast={section.contrast} />
+            </div>
+          ) : null}
+          {section.thread?.length ? (
+            <div className="mt-8 max-w-2xl">
+              <ThreadPreview lines={section.thread} label="Example" />
+            </div>
+          ) : null}
+          {section.callout ? (
+            <div className="mt-8">
+              <GuideCallout text={section.callout} />
+            </div>
           ) : null}
           {section.code ? (
             <PromptCopyBox prompt={section.code} label={pasteLabelFor(page.slug)} />

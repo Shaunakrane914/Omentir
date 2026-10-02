@@ -1,8 +1,43 @@
 import { describe, expect, test } from "bun:test";
 import { markdownToPortableText } from "./cms/markdown-to-portable-text";
-import { blogPostToMarkdown, seoPageToMarkdown } from "./public-page-markdown";
+import { blogPostToMarkdown, guidePageToMarkdown, seoPageToMarkdown } from "./public-page-markdown";
 
 describe("CMS markdown twins", () => {
+  test("writes guide tables, steps and the short answer to the .md twin so agents get the same comparison as readers", () => {
+    const markdown = guidePageToMarkdown({
+      slug: "openai-dots-vs-zapier-for-sales",
+      title: "OpenAI Dots vs Zapier",
+      description: "Which one to use.",
+      query: "dots vs zapier",
+      kicker: "Comparison",
+      cluster: "linkedin",
+      publishedDate: "October 2, 2026",
+      updatedDate: "October 2, 2026",
+      keywords: [],
+      answer: "Zapier for fixed steps, a Dot for judgment.",
+      sections: [
+        {
+          heading: "Side by side",
+          paragraphs: ["Different jobs."],
+          table: {
+            headers: ["OpenAI Dots", "Zapier"],
+            rows: [{ dimension: "Reads a profile", cells: ["Yes", "No"] }],
+          },
+          steps: [{ title: "Connect", detail: "Add the app." }],
+          thread: [{ speaker: "draft", text: "Saw your SDR post." }],
+          callout: "Prohibit linkedin.com.",
+        },
+      ],
+      faqItems: [],
+    });
+    expect(markdown).toContain("**Short answer:** Zapier for fixed steps, a Dot for judgment.");
+    expect(markdown).toContain("| | OpenAI Dots | Zapier |");
+    expect(markdown).toContain("| Reads a profile | Yes | No |");
+    expect(markdown).toContain("1. **Connect.** Add the app.");
+    expect(markdown).toContain("- **draft:** Saw your SDR post.");
+    expect(markdown).toContain("> Prohibit linkedin.com.");
+  });
+
   test("uses the Sanity blog title and body so a Studio edit is what agents read", () => {
     const markdown = blogPostToMarkdown({
       slug: "introducing-omentir-v2",

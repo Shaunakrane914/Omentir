@@ -37,6 +37,12 @@ export const guide = defineType({
       options: { layout: "tags" },
     }),
     defineField({
+      name: "answer",
+      type: "text",
+      rows: 3,
+      description: "Short answer shown in a box above the sections.",
+    }),
+    defineField({
       name: "ogImage",
       type: "image",
       options: { hotspot: true },

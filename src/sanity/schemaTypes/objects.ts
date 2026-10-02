@@ -164,6 +164,47 @@ export const guideSection = defineType({
       of: [defineArrayMember({ type: "string" })],
     }),
     defineField({ name: "code", type: "text", rows: 8 }),
+    defineField({
+      name: "table",
+      type: "seoComparisonTable",
+      description: "Headers name the value columns. Each row is a label plus one cell per header.",
+    }),
+    defineField({
+      name: "steps",
+      type: "array",
+      of: [defineArrayMember({ type: "seoPhase" })],
+      description: "Numbered steps on a vertical rail.",
+    }),
+    defineField({
+      name: "thread",
+      type: "array",
+      of: [defineArrayMember({ type: "seoThreadLine" })],
+      description: "Chat bubbles. Use draft for a message waiting for approval.",
+    }),
+    defineField({ name: "contrast", type: "guideContrast" }),
+    defineField({ name: "callout", type: "text", rows: 2, description: "One highlighted rule or warning." }),
+  ],
+});
+
+export const guideContrast = defineType({
+  name: "guideContrast",
+  title: "Weak vs strong",
+  type: "object",
+  fields: [
+    defineField({ name: "badLabel", type: "string", validation: (rule) => rule.required() }),
+    defineField({
+      name: "bad",
+      type: "array",
+      of: [defineArrayMember({ type: "string" })],
+      validation: (rule) => rule.required().min(1),
+    }),
+    defineField({ name: "goodLabel", type: "string", validation: (rule) => rule.required() }),
+    defineField({
+      name: "good",
+      type: "array",
+      of: [defineArrayMember({ type: "string" })],
+      validation: (rule) => rule.required().min(1),
+    }),
   ],
 });
 

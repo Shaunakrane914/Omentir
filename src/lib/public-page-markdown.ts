@@ -282,10 +282,35 @@ export function guidePageToMarkdown(page: GuidePage) {
       const bullets = section.bullets?.length
         ? "\n\n" + section.bullets.map((item) => `- ${item}`).join("\n")
         : "";
+      const steps = section.steps?.length
+        ? "\n\n" +
+          section.steps
+            .map((step, index) => `${index + 1}. **${step.title}.** ${step.detail}`)
+            .join("\n")
+        : "";
+      const table = section.table
+        ? "\n\n" +
+          [
+            `| | ${section.table.headers.join(" | ")} |`,
+            `| --- | ${section.table.headers.map(() => "---").join(" | ")} |`,
+            ...section.table.rows.map((row) => `| ${row.dimension} | ${row.cells.join(" | ")} |`),
+          ].join("\n")
+        : "";
+      const contrast = section.contrast
+        ? `\n\n**${section.contrast.badLabel}**\n\n${section.contrast.bad
+            .map((item) => `- ${item}`)
+            .join("\n")}\n\n**${section.contrast.goodLabel}**\n\n${section.contrast.good
+            .map((item) => `- ${item}`)
+            .join("\n")}`
+        : "";
+      const thread = section.thread?.length
+        ? "\n\n" + section.thread.map((line) => `- **${line.speaker}:** ${line.text}`).join("\n")
+        : "";
+      const callout = section.callout ? `\n\n> ${section.callout}` : "";
       const code = section.code
         ? `\n\n\`\`\`\n${section.code}\n\`\`\``
         : "";
-      return `## ${section.heading}\n\n${body}${bullets}${code}`;
+      return `## ${section.heading}\n\n${body}${bullets}${steps}${table}${contrast}${thread}${callout}${code}`;
     })
     .join("\n\n");
   const related = page.related?.length
@@ -304,6 +329,7 @@ export function guidePageToMarkdown(page: GuidePage) {
   return collapseMarkdown(
     [
       pageHeader(page.title, page.description, htmlPath),
+      page.answer ? `**Short answer:** ${page.answer}` : "",
       sections,
       related,
       faqs,
