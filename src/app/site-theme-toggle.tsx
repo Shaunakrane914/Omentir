@@ -1,11 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import {
-  SITE_THEME_STORAGE_KEY as STORAGE_KEY,
-  defaultThemeFor,
-  resolveSiteTheme,
-} from "./site-theme-script";
+import { SITE_THEME_STORAGE_KEY as STORAGE_KEY, resolveSiteTheme } from "./site-theme-script";
 
 type Preference = "system" | "light" | "dark";
 
@@ -18,20 +14,18 @@ function subscribe(listener: () => void) {
   };
 }
 
-/** With nothing stored, the page's own default (light on the site, dark in
- *  the app) shows as selected. */
+/** With nothing stored, Light (the default for everyone) shows as selected. */
 function readPreference(): Preference {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
     if (value === "light" || value === "dark" || value === "system") return value;
   } catch {}
-  return defaultThemeFor(window.location.pathname);
+  return "light";
 }
 
 function applyPreference(preference: Preference) {
   const resolved = resolveSiteTheme(
     preference,
-    window.location.pathname,
     window.matchMedia("(prefers-color-scheme: light)").matches,
   );
   const root = document.documentElement;

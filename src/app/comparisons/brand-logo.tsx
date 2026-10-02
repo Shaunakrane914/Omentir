@@ -36,18 +36,23 @@ export function BrandLogo({
   const mark = isOmentir ? (
     <LogoMark className="h-full w-full text-[var(--md-sys-color-on-surface)]" />
   ) : (
-    <picture className="contents">
-      {resolved.darkSrc ? (
-        <source media="(prefers-color-scheme: dark)" srcSet={resolved.darkSrc} />
-      ) : null}
+    <>
       {/* Official third-party marks. Empty alt when the brand name sits next
-          to the image so screen readers do not hear the name twice. */}
+          to the image so screen readers do not hear the name twice. The dark
+          variant follows the site theme (`dark:`), not the OS. */}
       <img
         src={resolved.src}
         alt={decorative ? "" : resolved.name}
-        className="h-full w-full object-contain"
+        className={`h-full w-full object-contain ${resolved.darkSrc ? "dark:hidden" : ""}`}
       />
-    </picture>
+      {resolved.darkSrc ? (
+        <img
+          src={resolved.darkSrc}
+          alt={decorative ? "" : resolved.name}
+          className="hidden h-full w-full object-contain dark:block"
+        />
+      ) : null}
+    </>
   );
 
   if (!framed) {
