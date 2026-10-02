@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     permissions:
-      contents: read
+      contents: write
       actions: read
     steps:
       - name: Deploy to VPS
@@ -175,6 +175,21 @@ jobs:
               exit 1
             fi
           done
+
+      # The VPS has the build now. Drop every vps-next-* release and its tag so
+      # the repo keeps only real version tags. The concurrency group means no
+      # other deploy is waiting on one of these.
+      - name: Delete prebuilt .next releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release list --limit 200 --json tagName \
+            --jq '.[].tagName | select(startswith("vps-next-"))' |
+            while read -r tag; do
+              gh release delete "$tag" --cleanup-tag --yes
+            done
 
       - name: Notify IndexNow
         continue-on-error: true
