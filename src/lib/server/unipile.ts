@@ -1237,18 +1237,40 @@ export function isUnipileConfigured() {
 export async function listUnipileLinkedInAccounts() {
   requireUnipileConfigured();
 
-  const result = await request<UnipileListResponse<UnipileAccount>>("/api/v1/accounts?limit=250");
-  return getListItems<UnipileAccount>(result)
-    .filter((account) => {
-      const provider = String(account.type || account.account_type || account.provider || "").toUpperCase();
-      return Boolean(account.id) && provider === "LINKEDIN";
-    })
-    .map((account) => ({
-      id: account.id || "",
-      name: account.name || account.display_name || "LinkedIn",
-      status: account.status,
-      createdAt: (account as UnipileAccount & { created_at?: string }).created_at,
-    }));
+  const accounts: Array<{
+    id: string;
+    name: string;
+    status?: string;
+    createdAt?: string;
+  }> = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | undefined;
+
+  while (true) {
+    const result = await request<UnipileListResponse<UnipileAccount>>(
+      withQuery("/api/v1/accounts", { limit: 250, cursor }),
+    );
+
+    const items = getListItems<UnipileAccount>(result)
+      .filter((account) => {
+        const provider = String(account.type || account.account_type || account.provider || "").toUpperCase();
+        return Boolean(account.id) && provider === "LINKEDIN";
+      })
+      .map((account) => ({
+        id: account.id || "",
+        name: account.name || account.display_name || "LinkedIn",
+        status: account.status,
+        createdAt: (account as UnipileAccount & { created_at?: string }).created_at,
+      }));
+
+    accounts.push(...items);
+
+    cursor = getListCursor(result);
+    if (!cursor || seenCursors.has(cursor)) break;
+    seenCursors.add(cursor);
+  }
+
+  return accounts;
 }
 
 // Fetches the connected account owner's basic LinkedIn identity. Unlike a
